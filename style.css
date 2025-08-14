@@ -1,0 +1,72 @@
+:root {
+  --bg: #f2f2f2;
+  --text: #222;
+  --accent: #0366d6;
+  --header-bg: #24292e;
+  --header-text: #fff;
+  --card-bg: #fff;
+  --shadow: rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --text: #ddd;
+    --accent: #58a6ff;
+    --header-bg: #0d1117;
+    --header-text: #fff;
+    --card-bg: #161b22;
+    --shadow: rgba(0,0,0,0.4);
+  }
+}
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+}
+header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 1em 0;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 5px var(--shadow);
+  text-align: center;
+}
+main {
+  padding: 2em;
+  max-width: 700px;
+  margin: auto;
+}
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5em;
+  box-shadow: 0 4px 12px var(--shadow);
+  margin-bottom: 1.5em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px var(--shadow);
+}
+a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 0.3em 0.6em;
+  transition: background 0.3s;
+}
+a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+footer {
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--text);
+  padding: 1em 0;
+  opacity: 0.7;
+}
