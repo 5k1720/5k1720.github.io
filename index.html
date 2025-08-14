@@ -1,29 +1,160 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="xx-ZA">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Мой сайт на GitHub Pages</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>⚡ΨУЛЬТРА-ШИЗО⚡</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc, #ff6600, #ff0000, #00ff99);
+      background-size: 1200% 1200%;
+      animation: bg-shift 8s ease infinite;
+      overflow-x: hidden;
+      color: #fff;
+      font-family: 'Rubik Glitch', cursive;
+    }
+    @keyframes bg-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-family: 'Monoton', cursive;
+      text-align: center;
+      font-size: 4rem;
+      margin: 2rem 0;
+      text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
+      animation: flicker 3s infinite alternate, spin 10s infinite linear;
+    }
+    @keyframes flicker {
+      0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+      20%, 24%, 55% { opacity: 0.3; }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .chaos {
+      font-family: 'Press Start 2P', monospace;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.3);
+      margin: 1rem auto;
+      max-width: 90%;
+      box-shadow: 0 0 15px rgba(255,255,255,0.7);
+      animation: pulse 2s infinite ease-in-out, wobble 5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes wobble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(3deg); }
+      75% { transform: rotate(-3deg); }
+    }
+
+    .rainbow {
+      display: inline-block;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+      background-size: 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-move 2s linear infinite;
+    }
+    @keyframes rainbow-move {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    .glitch {
+      position: relative;
+      color: white;
+      font-size: 2rem;
+      text-align: center;
+      animation: shake 1s infinite;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      width: 100%;
+      background: transparent;
+      overflow: hidden;
+    }
+    .glitch::before {
+      left: 2px;
+      text-shadow: -2px 0 red;
+      animation: glitch-anim 2s infinite linear alternate-reverse;
+    }
+    .glitch::after {
+      left: -2px;
+      text-shadow: -2px 0 blue;
+      animation: glitch-anim 3s infinite linear alternate-reverse;
+    }
+    @keyframes glitch-anim {
+      0% { clip: rect(0, 9999px, 0, 0); }
+      5% { clip: rect(0, 9999px, 50px, 0); }
+      10% { clip: rect(0, 9999px, 10px, 0); }
+      15% { clip: rect(0, 9999px, 40px, 0); }
+      20% { clip: rect(0, 9999px, 20px, 0); }
+      25% { clip: rect(0, 9999px, 60px, 0); }
+      30% { clip: rect(0, 9999px, 30px, 0); }
+      35% { clip: rect(0, 9999px, 70px, 0); }
+      40% { clip: rect(0, 9999px, 15px, 0); }
+      100% { clip: rect(0, 9999px, 100px, 0); }
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    .matrix {
+      font-family: monospace;
+      white-space: pre;
+      overflow: hidden;
+      animation: scroll-up 8s linear infinite;
+    }
+    @keyframes scroll-up {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100%); }
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Привет с GitHub Pages</h1>
-  </header>
-  <main>
-    <div class="card">
-      <p>Это мой первый сайт, опубликованный прямо с iPhone 📱</p>
-    </div>
-    <div class="card">
-      <p>Измени этот файл в GitHub, чтобы обновить сайт.</p>
-    </div>
-    <div class="card">
-      <p><a href="https://github.com/">Открыть мой GitHub</a></p>
-    </div>
-  </main>
-  <footer>
-    <p>Последнее обновление: <span id="last-updated"></span></p>
-  </footer>
-  <script src="script.js"></script>
+  <h1>⚡ <span class="rainbow">Ψ У Л Ь Т Р А - Ш И З О Ψ</span> ⚡</h1>
+
+  <div class="chaos">
+    <p class="glitch" data-text="ТВОЙ МОЗГ НЕ ГОТОВ">ТВОЙ МОЗГ НЕ ГОТОВ</p>
+    <p>Мигает, крутится, пульсирует, живёт своей жизнью 💥🌈</p>
+  </div>
+
+  <div class="chaos matrix">
+    0101010101010101010101010  
+    1010101010101010101010101  
+    ΨΨΨΨΨΨΨΨΨΨΨΨΨΨΨΨΨΨ  
+    9999999999999999999999999  
+    ズズズズズズズズズズズ  
+  </div>
+
+  <div class="chaos">
+    <p class="rainbow">Врубай F11 и кайфуй</p>
+  </div>
 </body>
 </html>
