@@ -156,5 +156,18 @@
   <div class="chaos">
     <p class="rainbow">press F</p>
   </div>
+
+  <script>
+    document.addEventListener('keydown', function(event) {
+      if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    });
+  </script>
 </body>
 </html>
