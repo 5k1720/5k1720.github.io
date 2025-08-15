@@ -158,16 +158,38 @@
   </div>
 
   <script>
-    document.addEventListener('keydown', function(event) {
-      if (event.key.toLowerCase() === 'f') {
-        event.preventDefault();
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen();
-        } else {
-          document.exitFullscreen();
-        }
+    (function () {
+      function isEditable(el) {
+        return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
       }
-    });
+      function inFullscreen() {
+        return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+      }
+      function requestFS(el) {
+        if (el.requestFullscreen) return el.requestFullscreen();
+        if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+        if (el.msRequestFullscreen) return el.msRequestFullscreen();
+        return Promise.reject(new Error('Fullscreen API unsupported'));
+      }
+      function exitFS() {
+        if (document.exitFullscreen) return document.exitFullscreen();
+        if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+        if (document.msExitFullscreen) return document.msExitFullscreen();
+        return Promise.reject(new Error('Exit Fullscreen unsupported'));
+      }
+
+      document.addEventListener('keydown', function (event) {
+        // Физическая клавиша F, не зависит от раскладки
+        if (event.code === 'KeyF' && !isEditable(event.target)) {
+          event.preventDefault();
+          if (!inFullscreen()) {
+            requestFS(document.documentElement).catch(function(e){ console.warn(e.message); });
+          } else {
+            exitFS().catch(function(e){ console.warn(e.message); });
+          }
+        }
+      });
+    })();
   </script>
 </body>
 </html>
