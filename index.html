@@ -29,7 +29,7 @@
       font-size: 4rem;
       margin: 2rem 0;
       text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
-      animation: flicker 3s infinite alternate, spinScale 10s linear infinite;
+      animation: flicker 3s infinite alternate, spin 10s linear infinite;
       transform-origin: center center;
       backface-visibility: hidden;
       will-change: transform;
@@ -210,8 +210,7 @@
       background: #333;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      * { animation: none !important; }
+    
     }
   </style>
 </head>
@@ -277,9 +276,23 @@
 
     function copyPrompt() {
       const content = document.getElementById('promptContent').innerText;
-      navigator.clipboard.writeText(content).then(() => {
-        alert('Промт скопирован!');
-      }).catch(err => {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(content).catch(function(){ fallbackCopy(content); });
+      } else {
+        fallbackCopy(content);
+      }
+    }
+    function fallbackCopy(text){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+    }).catch(err => {
         console.error('Ошибка копирования', err);
       });
     }
