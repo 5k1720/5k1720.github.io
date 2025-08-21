@@ -1,10 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
 
+* { box-sizing: border-box; }
+:root, html, body { width:100%; max-width:100%; overflow-x:hidden; }
+
 html, body {
   margin: 0;
   padding: 0;
-  max-width: 100%;
-  overflow-x: hidden; /* фикс ширины на айфоне */
   color: #fff;
   font-family: 'Rubik Glitch', cursive;
   background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc, #ff6600, #ff0000, #00ff99);
@@ -46,18 +47,9 @@ h1 {
   box-shadow: 0 0 15px rgba(255,255,255,0.7);
   animation: pulse 2s infinite ease-in-out, wobble 5s infinite;
 }
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-@keyframes wobble {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(3deg); }
-  75% { transform: rotate(-3deg); }
-}
-@media (min-width: 992px) {
-  .chaos { max-width: 60%; }
-}
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+@keyframes wobble { 0%,100%{transform:rotate(0);} 25%{transform:rotate(3deg);} 75%{transform:rotate(-3deg);} }
+@media (min-width: 992px) { .chaos { max-width: 60%; } }
 
 .rainbow {
   display: inline-block;
@@ -67,81 +59,47 @@ h1 {
   -webkit-text-fill-color: transparent;
   animation: rainbow-move 2s linear infinite;
 }
-@keyframes rainbow-move {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
+@keyframes rainbow-move { 0%{background-position:0% 50%;} 100%{background-position:100% 50%;} }
 
-.glitch {
-  position: relative;
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  animation: shake 1s infinite;
-}
-.glitch::before, .glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  left: 0;
-  width: 100%;
-}
-.glitch::before {
-  left: 2px;
-  text-shadow: -2px 0 red;
-  animation: glitch-anim 2s infinite linear alternate-reverse;
-}
-.glitch::after {
-  left: -2px;
-  text-shadow: -2px 0 blue;
-  animation: glitch-anim 3s infinite linear alternate-reverse;
-}
+.glitch { position:relative; color:white; font-size:2rem; text-align:center; animation:shake 1s infinite; }
+.glitch::before, .glitch::after { content:attr(data-text); position:absolute; left:0; width:100%; }
+.glitch::before { left:2px; text-shadow:-2px 0 red; animation:glitch-anim 2s infinite linear alternate-reverse; }
+.glitch::after { left:-2px; text-shadow:-2px 0 blue; animation:glitch-anim 3s infinite linear alternate-reverse; }
 @keyframes glitch-anim {
-  0% { clip: rect(0, 9999px, 0, 0); }
-  25% { clip: rect(0, 9999px, 50px, 0); }
-  50% { clip: rect(0, 9999px, 100px, 0); }
-  75% { clip: rect(0, 9999px, 20px, 0); }
-  100% { clip: rect(0, 9999px, 80px, 0); }
+  0% { clip: rect(0,9999px,0,0); }
+  25% { clip: rect(0,9999px,50px,0); }
+  50% { clip: rect(0,9999px,100px,0); }
+  75% { clip: rect(0,9999px,20px,0); }
+  100% { clip: rect(0,9999px,80px,0); }
 }
-@keyframes shake {
-  0%,100% { transform: translate(0,0) rotate(0); }
-  25% { transform: translate(-2px,2px) rotate(-1deg); }
-  50% { transform: translate(2px,-2px) rotate(1deg); }
-  75% { transform: translate(-1px,1px) rotate(0); }
-}
+@keyframes shake { 0%,100%{transform:translate(0,0) rotate(0);} 25%{transform:translate(-2px,2px) rotate(-1deg);} 50%{transform:translate(2px,-2px) rotate(1deg);} 75%{transform:translate(-1px,1px) rotate(0);} }
 
-.matrix {
-  font-family: monospace;
-  white-space: pre;
-  overflow: hidden;
-  animation: scroll-up 8s linear infinite;
-}
-@keyframes scroll-up {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
-}
+.matrix { font-family:monospace; white-space:pre; overflow:hidden; animation:scroll-up 8s linear infinite; }
+@keyframes scroll-up { 0%{transform:translateY(0);} 100%{transform:translateY(-100%);} }
 
+/* Сигилы — не выходят за экран */
 .sigil {
   position: fixed;
   top: 50%;
-  transform: translateY(-50%);
   font-size: clamp(24px, 4vw, 64px);
   line-height: 1;
   color: #fff;
-  opacity: 0.2;
+  opacity: .2;
   filter: grayscale(1) contrast(1.15);
   pointer-events: none;
   user-select: none;
   mix-blend-mode: screen;
-  animation: tremble 2.4s ease-in-out infinite;
+  will-change: transform;
+  contain: paint;
+  transform: translateY(-50%);
 }
-.sigil-left { left: 1rem; }
-.sigil-center { left: 50%; transform: translate(-50%, -50%); }
-.sigil-right { right: 1rem; }
-
-@keyframes tremble {
-  0%,100% { transform: translate(-50%,-50%) scale(1); }
-  50% { transform: translate(calc(-50% + 1px), calc(-50% + 1px)) scale(1.02); }
-}
+.sigil-left  { left: max(1rem, env(safe-area-inset-left)); }
+.sigil-right { right: max(1rem, env(safe-area-inset-right)); }
+.sigil-center{ left:50%; transform: translate(-50%,-50%); }
+@keyframes tremble { 0%,100%{ transform: translate(var(--tx,0), var(--ty,-50%)) scale(1) rotate(0); } 50%{ transform: translate(var(--tx,0), var(--ty,-50%)) scale(1.02) rotate(-0.5deg); } }
+.sigil-left  { --tx: 0;   --ty: -50%; }
+.sigil-right { --tx: 0;   --ty: -50%; }
+.sigil-center{ --tx: -50%; --ty: -50%; }
 
 .prompt-block {
   font-family: 'Press Start 2P', monospace;
@@ -153,19 +111,8 @@ h1 {
   box-shadow: 0 0 15px rgba(255,255,255,0.7);
   position: relative;
 }
-.prompt-header {
-  font-size: 1.2rem;
-  margin-bottom: .5rem;
-  color: #0ff;
-}
-.prompt-text {
-  font-size: .8rem;
-  white-space: pre-wrap;
-  background: rgba(0,0,0,0.3);
-  padding: .5rem;
-  border-radius: 8px;
-  overflow-x: auto;
-}
+.prompt-header { font-size:1.2rem; margin-bottom:.5rem; color:#0ff; }
+.prompt-text { font-size:.8rem; white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:.5rem; border-radius:8px; overflow-x:auto; }
 .copy-btn {
   font-family: 'Press Start 2P', monospace;
   position: absolute;
@@ -181,18 +128,17 @@ h1 {
 }
 .copy-btn:active { transform: scale(0.95); }
 
-/* частицы больше и не раздувают ширину */
-.particle {
-  position: fixed;
-  z-index: 9999;
-  width: 8px;   /* было 6 */
-  height: 8px;  /* было 6 */
-  border-radius: 50%;
-  pointer-events: none;
-  animation: puff 600ms ease-out forwards;
-  transform: translate(-50%, -50%);
+/* Частицы — крупнее и внутри вьюпорта */
+.particle{
+  position:fixed;
+  z-index:9999;
+  width:8px; height:8px; border-radius:50%;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  animation:puff 600ms ease-out forwards;
+  contain:paint;
 }
-@keyframes puff {
-  from { transform: translate(-50%,-50%) scale(1); opacity:1; }
-  to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.6); opacity:0; }
+@keyframes puff{
+  from{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+  to  { transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.6); opacity:0; }
 }
