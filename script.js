@@ -1,7 +1,7 @@
-function copyPrompt(btn) {
+function copyPrompt(btn){
   const text = document.getElementById('promptContent').textContent;
 
-  // надёжное копирование через textarea (работает и на iOS)
+  // надёжное копирование (работает и на iOS)
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly','');
@@ -9,43 +9,42 @@ function copyPrompt(btn) {
   ta.style.left = '-9999px';
   document.body.appendChild(ta);
   ta.select();
-  try {
-    document.execCommand('copy');
-    showCopiedMsg();
-    spawnParticles(btn);
-  } catch(e) {
-    console.error('Не удалось скопировать', e);
-  }
+  try { document.execCommand('copy'); } catch(e) { console.error(e); }
   document.body.removeChild(ta);
+
+  showCopiedMsg();
+  spawnParticles(btn);
 }
 
-function showCopiedMsg() {
-  const msg = document.createElement('div');
-  msg.textContent = '✓ Copied';
-  msg.style.position = 'fixed';
-  msg.style.bottom = '10%';
-  msg.style.right = '10%';
-  msg.style.background = 'rgba(0,0,0,0.8)';
-  msg.style.color = '#0f0';
-  msg.style.padding = '6px 12px';
-  msg.style.borderRadius = '6px';
-  msg.style.fontFamily = "Press Start 2P, monospace";
-  msg.style.fontSize = '0.7rem';
-  msg.style.zIndex = '10000';
-  msg.style.opacity = '1';
-  msg.style.transition = 'opacity 1s ease-out';
-  document.body.appendChild(msg);
-  setTimeout(()=> msg.style.opacity='0',800);
-  setTimeout(()=> msg.remove(),1800);
+function showCopiedMsg(){
+  const el = document.createElement('div');
+  el.textContent = '✓ Copied';
+  Object.assign(el.style, {
+    position:'fixed', bottom:'10%', right:'10%', background:'rgba(0,0,0,0.8)',
+    color:'#0f0', padding:'6px 12px', borderRadius:'6px',
+    fontFamily:"Press Start 2P, monospace", fontSize:'0.7rem',
+    zIndex:10000, opacity:'1', transition:'opacity 1s ease-out'
+  });
+  document.body.appendChild(el);
+  setTimeout(()=> el.style.opacity='0',800);
+  setTimeout(()=> el.remove(),1800);
 }
 
-function spawnParticles(btn) {
+// частицы не выходят за границы: x/y и радиус ограничены
+function spawnParticles(btn){
   const rect = btn.getBoundingClientRect();
-  const x = rect.left + rect.width/2;
-  const y = rect.top + rect.height/2;
-  const n = 18, max = 80;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = rect.left + rect.width/2;
+  let y = rect.top  + rect.height/2;
+  // зажимаем координаты в пределах экрана
+  x = Math.min(vw-2, Math.max(2, x));
+  y = Math.min(vh-2, Math.max(2, y));
 
-  for (let i=0;i<n;i++) {
+  const n = 18;
+  const edgeDist = Math.min(x, vw-x, y, vh-y) - 6; // расстояние до края
+  const max = Math.max(32, Math.min(80, edgeDist)); // не вылетать за край
+
+  for(let i=0;i<n;i++){
     const p = document.createElement('span');
     p.className = 'particle';
     const ang = Math.random()*2*Math.PI;
@@ -55,12 +54,12 @@ function spawnParticles(btn) {
     p.style.setProperty('--dx', dx+'px');
     p.style.setProperty('--dy', dy+'px');
     p.style.left = x+'px';
-    p.style.top = y+'px';
-    p.style.background = `hsl(${Math.floor(Math.random()*360)},100%,60%)`;
+    p.style.top  = y+'px';
     const size = 6 + Math.random()*6; // 6–12 px
-    p.style.width = size+'px';
+    p.style.width  = size+'px';
     p.style.height = size+'px';
+    p.style.background = `hsl(${Math.floor(Math.random()*360)},100%,60%)`;
     document.body.appendChild(p);
-    setTimeout(()=> p.remove(),700);
+    setTimeout(()=> p.remove(), 700);
   }
 }
