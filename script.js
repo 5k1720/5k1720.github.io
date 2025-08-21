@@ -1,7 +1,7 @@
 function copyPrompt(btn) {
   const text = document.getElementById('promptContent').textContent;
 
-  // через textarea (работает даже в file:// на iOS)
+  // надёжное копирование через textarea (работает и на iOS)
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly','');
@@ -57,6 +57,9 @@ function spawnParticles(btn) {
     p.style.left = x+'px';
     p.style.top = y+'px';
     p.style.background = `hsl(${Math.floor(Math.random()*360)},100%,60%)`;
+    const size = 6 + Math.random()*6; // 6–12 px
+    p.style.width = size+'px';
+    p.style.height = size+'px';
     document.body.appendChild(p);
     setTimeout(()=> p.remove(),700);
   }
