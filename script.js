@@ -13,22 +13,25 @@ function showCopiedMsg(){
 function spawnParticles(btn){
   const r=btn.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
   let x=r.left+r.width/2,y=r.top+r.height/2;x=Math.min(vw-2,Math.max(2,x));y=Math.min(vh-2,Math.max(2,y));
-  const n=18,edge=Math.min(x,vw-x,y,vh-y)-6,max=Math.max(36,Math.min(90,edge));
+  const n=18,edge=Math.min(x,vw-x,y,vh-y)-6,max=Math.max(32,Math.min(80,edge));
   for(let i=0;i<n;i++){const p=document.createElement('span');p.className='particle';
     const a=Math.random()*2*Math.PI,d=Math.random()*max,dx=Math.cos(a)*d,dy=Math.sin(a)*d;
     p.style.setProperty('--dx',dx+'px');p.style.setProperty('--dy',dy+'px');p.style.left=x+'px';p.style.top=y+'px';
-    const s=8+Math.random()*6;p.style.width=s+'px';p.style.height=s+'px';p.style.background=`hsl(${Math.floor(Math.random()*360)},100%,60%)`;
+    const s=6+Math.random()*6;p.style.width=s+'px';p.style.height=s+'px';p.style.background=`hsl(${Math.floor(Math.random()*360)},100%,60%)`;
     document.body.appendChild(p);setTimeout(()=>p.remove(),700)}
 }
 (function(){
   const el=document.querySelector('.tilt');if(!el)return;
-  function set(rx,ry){el.style.transform=`rotateX(${ry}deg) rotateY(${rx}deg)`;}
+  let px=0,py=0;
+  function set(tX,tY){el.style.transform=`translateY(${py}px) rotateX(${tY}deg) rotateY(${tX}deg)`;}
   function onMove(e){
     const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
     const x=(e.clientX-cx)/r.width,y=(e.clientY-cy)/r.height;
-    set(x*8,-y*8)
+    const rx=(x*8),ry=(-y*8);set(rx,ry)
   }
-  function onOrient(e){set((e.gamma||0)/8,-(e.beta||0)/12)}
+  function onOrient(e){
+    const rx=(e.gamma||0)/8,ry=-(e.beta||0)/12;set(rx,ry)
+  }
   el.addEventListener('mousemove',onMove);
   if(window.DeviceOrientationEvent){window.addEventListener('deviceorientation',onOrient)}
 })();
