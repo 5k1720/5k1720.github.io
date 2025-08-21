@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
 
-*,*::before,*::after{box-sizing:border-box}
+*{box-sizing:border-box}
 :root,html,body{width:100%;max-width:100%;overflow-x:hidden}
 html,body{
   margin:0;padding:0;color:#fff;font-family:'Rubik Glitch',cursive;
   background:linear-gradient(270deg,#ff00cc,#3333ff,#00ffcc,#ff6600,#ff0000,#00ff99);
-  background-size:1200% 1200%;animation:bg-shift 8s ease infinite
+  background-size:1200% 1200%;
+  animation:bg-shift 8s ease infinite
 }
 @keyframes bg-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
@@ -38,8 +39,9 @@ h1{
 @keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,2px) rotate(-1deg)}50%{transform:translate(2px,-2px) rotate(1deg)}75%{transform:translate(-1px,1px) rotate(0)}}
 
 .matrix{font-family:monospace;white-space:pre;overflow:hidden}
-.floaty{animation:floatyAnim 6s ease-in-out infinite}
-@keyframes floatyAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.sticky{position:sticky;top:0;z-index:5}
+.tilt{transform-style:preserve-3d;will-change:transform;animation:bob 6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 
 .glass{
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:16px;
@@ -51,51 +53,66 @@ h1{
   background-size:3px 3px;pointer-events:none;mix-blend-mode:overlay
 }
 
-.sticky{position:sticky;top:0;z-index:5}
-.tilt{transform-style:preserve-3d;will-change:transform}
-
 .liquid{
-  display:inline-block;
-  background:radial-gradient(circle at 20% 50%,#ff00cc,#3333ff,#00ffcc,#ff6600,#ff0000,#00ff99);
-  background-size:200% 200%;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:liquidMove 6s ease infinite;
-  font-weight:800;letter-spacing:.5px;
-  -webkit-text-stroke:2px rgba(255,255,255,.35);
-  filter:drop-shadow(0 0 12px rgba(255,255,255,.28))
+  display:inline-block;background:
+    radial-gradient(60% 120% at 20% 50%,#fff 0%,transparent 60%),
+    radial-gradient(50% 120% at 80% 50%,#fff 0%,transparent 60%),
+    conic-gradient(from 0deg,#ff00cc,#3333ff,#00ffcc,#ff6600,#ff0000,#00ff99,#ff00cc);
+  background-size:200% 200%,200% 200%,200% 200%;
+  background-position:0% 50%,100% 50%,50% 50%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:liquid-shift 7s ease-in-out infinite
 }
-@keyframes liquidMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes liquid-shift{
+  0%{background-position:0% 50%,100% 50%,50% 50%}
+  50%{background-position:100% 50%,0% 50%,60% 40%}
+  100%{background-position:0% 50%,100% 50%,50% 50%}
+}
+
+.sigil{
+  position:fixed;top:50%;font-size:clamp(24px,4vw,64px);line-height:1;color:#fff;opacity:.2;
+  filter:grayscale(1) contrast(1.15) url(#sigil-warp);pointer-events:none;user-select:none;
+  mix-blend-mode:screen;will-change:filter,transform;contain:paint;transform:translateY(-50%)
+}
+.sigil-left{left:max(1rem,env(safe-area-inset-left))}
+.sigil-right{right:max(1rem,env(safe-area-inset-right))}
+.sigil-center{left:50%;transform:translate(-50%,-50%)}
 
 .prompt-block{
-  font-family:'Press Start 2P',monospace;
-  position:relative;z-index:2;
-  padding:1rem;border-radius:12px;background:rgba(0,0,0,.5);
-  margin:1rem auto;max-width:90%;box-shadow:0 0 15px rgba(255,255,255,.7)
+  font-family:'Press Start 2P',monospace;padding:1rem;border-radius:12px;background:rgba(0,0,0,.5);
+  margin:1rem auto;max-width:90%;box-shadow:0 0 15px rgba(255,255,255,.7);position:relative
 }
-.prompt-header{font-size:1.2rem;margin-bottom:.6rem;color:#0ff}
-.prompt-text{
-  font-family:monospace;font-size:.85rem;line-height:1.4;
-  white-space:pre-wrap;word-break:break-word;
-  background:rgba(0,0,0,.3);padding:.75rem;border-radius:10px;
-  max-height:52vh;overflow:auto
-}
+.prompt-header{font-size:1.2rem;margin-bottom:.5rem;color:#0ff}
+.prompt-text{font-size:.8rem;white-space:pre-wrap;background:rgba(0,0,0,.3);padding:.5rem;border-radius:8px;overflow-x:auto}
 .copy-btn{
-  position:absolute;right:.75rem;bottom:.75rem;
-  padding:.5rem .9rem;border:none;border-radius:8px;
-  background:#ff00cc;color:#fff;cursor:pointer;
-  font-family:'Press Start 2P',monospace;font-size:.8rem;
-  box-shadow:0 0 10px rgba(255,255,255,.35)
+  font-family:'Press Start 2P',monospace;position:absolute;bottom:.5rem;right:.5rem;font-size:.7rem;
+  background:#111;color:#fff;border:1px solid #fff;padding:.3rem .6rem;border-radius:6px;cursor:pointer
 }
-.copy-btn:active{transform:scale(.96)}
+.copy-btn:active{transform:scale(.95)}
 
-.blobs{position:fixed;inset:0;overflow:hidden;z-index:-1;opacity:.55;filter:blur(20px) saturate(140%)}
-.blob{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:blobMove 25s infinite alternate ease-in-out}
-.b1{width:40vw;height:40vw;background:#ff00cc;top:10%;left:15%;animation-duration:30s}
-.b2{width:35vw;height:35vw;background:#3333ff;top:50%;left:60%;animation-duration:40s}
-.b3{width:50vw;height:50vw;background:#00ffcc;top:70%;left:20%;animation-duration:35s}
-@keyframes blobMove{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-40px) scale(1.1)}100%{transform:translate(-20px,30px) scale(.9)}}
-.blobs::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(40% 60% at 20% 80%,rgba(255,255,255,.08),transparent 60%),radial-gradient(35% 55% at 80% 85%,rgba(255,255,255,.06),transparent 60%);mix-blend-mode:screen}
+.particle{
+  position:fixed;z-index:9999;width:8px;height:8px;border-radius:50%;pointer-events:none;
+  transform:translate(-50%,-50%);animation:puff 600ms ease-out forwards;contain:paint
+}
+@keyframes puff{
+  from{transform:translate(-50%,-50%) scale(1);opacity:1}
+  to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.6);opacity:0}
+}
 
-.particle{position:fixed;border-radius:50%;pointer-events:none;animation:particleAnim .7s forwards ease-out}
-@keyframes particleAnim{to{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+.blobs{position:fixed;inset:auto 0 0 0;height:45vh;z-index:0;pointer-events:none;filter:blur(30px);opacity:.25}
+.blob{position:absolute;border-radius:40% 60% 50% 50%/60% 40% 60% 40%;mix-blend-mode:screen}
+.b1{left:10%;bottom:-10%;width:40vmin;height:40vmin;background:#ff00cc;animation:blob1 18s ease-in-out infinite}
+.b2{left:40%;bottom:-15%;width:45vmin;height:45vmin;background:#3333ff;animation:blob2 22s ease-in-out infinite}
+.b3{right:8%;bottom:-12%;width:38vmin;height:38vmin;background:#00ffcc;animation:blob3 20s ease-in-out infinite}
+@keyframes blob1{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-6vmin) scale(1.05)}
+}
+@keyframes blob2{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-8vmin) scale(1.08)}
+}
+@keyframes blob3{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-5vmin) scale(1.04)}
+}
