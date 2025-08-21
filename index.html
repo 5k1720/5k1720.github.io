@@ -33,6 +33,17 @@
   <div class="sigil sigil-center" aria-hidden="true">☽☯☾</div>
   <div class="sigil sigil-right" aria-hidden="true">☥</div>
 
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="sigil-warp">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015 0.02" numOctaves="2" seed="7" result="noise">
+        <animate attributeName="baseFrequency" values="0.015 0.02; 0.020 0.028; 0.015 0.02" dur="8s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G">
+        <animate attributeName="scale" values="6;10;6" dur="8s" repeatCount="indefinite"/>
+      </feDisplacementMap>
+    </filter>
+  </svg>
+
   <script src="script.js"></script>
 </body>
 </html>
