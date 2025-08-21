@@ -30,6 +30,9 @@
       margin: 2rem 0;
       text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
       animation: flicker 3s infinite alternate, spin 10s infinite linear;
+      display: inline-block;
+      transform-origin: center center;
+      will-change: transform;
     }
     @keyframes flicker {
       0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
@@ -39,6 +42,14 @@
       0% { transform: rotate(0deg) scale(1); }
       50% { transform: rotate(180deg) scale(1.1); }
       100% { transform: rotate(360deg) scale(1); }
+    }
+
+    /* Mobile fix: spin without scale */
+    @media (max-width: 768px) {
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     }
 
     .chaos {
