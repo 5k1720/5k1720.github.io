@@ -1,7 +1,5 @@
 function copyPrompt(btn){
   const text = document.getElementById('promptContent').textContent;
-
-  // надёжное копирование (работает и на iOS)
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly','');
@@ -11,7 +9,6 @@ function copyPrompt(btn){
   ta.select();
   try { document.execCommand('copy'); } catch(e) { console.error(e); }
   document.body.removeChild(ta);
-
   showCopiedMsg();
   spawnParticles(btn);
 }
@@ -30,20 +27,16 @@ function showCopiedMsg(){
   setTimeout(()=> el.remove(),1800);
 }
 
-// частицы не выходят за границы: x/y и радиус ограничены
 function spawnParticles(btn){
   const rect = btn.getBoundingClientRect();
   const vw = window.innerWidth, vh = window.innerHeight;
   let x = rect.left + rect.width/2;
   let y = rect.top  + rect.height/2;
-  // зажимаем координаты в пределах экрана
   x = Math.min(vw-2, Math.max(2, x));
   y = Math.min(vh-2, Math.max(2, y));
-
   const n = 18;
-  const edgeDist = Math.min(x, vw-x, y, vh-y) - 6; // расстояние до края
-  const max = Math.max(32, Math.min(80, edgeDist)); // не вылетать за край
-
+  const edgeDist = Math.min(x, vw-x, y, vh-y) - 6;
+  const max = Math.max(32, Math.min(80, edgeDist));
   for(let i=0;i<n;i++){
     const p = document.createElement('span');
     p.className = 'particle';
@@ -55,7 +48,7 @@ function spawnParticles(btn){
     p.style.setProperty('--dy', dy+'px');
     p.style.left = x+'px';
     p.style.top  = y+'px';
-    const size = 6 + Math.random()*6; // 6–12 px
+    const size = 6 + Math.random()*6;
     p.style.width  = size+'px';
     p.style.height = size+'px';
     p.style.background = `hsl(${Math.floor(Math.random()*360)},100%,60%)`;
