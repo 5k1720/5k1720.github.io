@@ -252,5 +252,33 @@
       });
     })();
   </script>
+  <script>
+    // Mobile Safari иногда «застывает» на комбинированных анимациях
+    // Форсим перезапуск и подстраиваемся под ориентацию/размер
+    (function(){
+      var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function preferNoMotion(){ return mqReduce && mqReduce.matches; }
+      function isPhoneMode(){
+        return window.matchMedia('(max-width: 768px)').matches ||
+               window.matchMedia('(orientation: landscape) and (max-height: 480px)').matches;
+      }
+      function applyRotorAnim(){
+        if (preferNoMotion()) return; // уважаем системную настройку
+        var r = document.querySelector('.rotor');
+        if (!r) return;
+        // сбросить и заново назначить, чтобы iOS запустил анимацию
+        r.style.animation = 'none';
+        // reflow
+        void r.offsetHeight;
+        r.style.animation = (isPhoneMode() ? 'spin 10s linear infinite' : 'spinScale 10s linear infinite');
+      }
+      var deb;
+      function onResize(){ clearTimeout(deb); deb = setTimeout(applyRotorAnim, 100); }
+      document.addEventListener('DOMContentLoaded', applyRotorAnim);
+      window.addEventListener('orientationchange', onResize);
+      window.addEventListener('resize', onResize);
+      document.addEventListener('visibilitychange', function(){ if (!document.hidden) applyRotorAnim(); });
+    })();
+  </script>
 </body>
 </html>
