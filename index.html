@@ -29,28 +29,37 @@
       font-size: 4rem;
       margin: 2rem 0;
       text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
-      animation: flicker 3s infinite alternate, spin 10s infinite linear;
-      display: inline-block;
-      transform-origin: center center;
-      will-change: transform;
+      /* flicker only on the block itself */
+      animation: flicker 3s infinite alternate;
     }
     @keyframes flicker {
       0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
       20%, 24%, 55% { opacity: 0.3; }
     }
+
+    /* spinner animations */
     @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spinScale {
       0% { transform: rotate(0deg) scale(1); }
       50% { transform: rotate(180deg) scale(1.1); }
       100% { transform: rotate(360deg) scale(1); }
     }
 
-    /* Mobile fix: spin without scale */
-    @media (max-width: 768px) {
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
+    /* rotor element inside H1 does the transform */
+    .rotor {
+      display: inline-block;
+      transform-origin: center center;
+      backface-visibility: hidden;
+      will-change: transform;
+      animation: spinScale 10s linear infinite;
     }
+    /* phones: rotate only */
+    @media (max-width: 768px) { .rotor { animation: spin 10s linear infinite; } }
+    /* small-height landscape phones */
+    @media (orientation: landscape) and (max-height: 480px) { .rotor { animation: spin 8s linear infinite; } }
 
     .chaos {
       font-family: 'Press Start 2P', monospace;
@@ -72,7 +81,7 @@
       75% { transform: rotate(-3deg); }
     }
 
-    /* Desktop-only: slightly narrower "frames" */
+    /* Desktop-only: slightly narrower frames */
     @media (min-width: 992px) {
       .chaos { max-width: 60%; }
     }
@@ -184,7 +193,7 @@
   </style>
 </head>
 <body>
-  <h1>⚡ <span class="rainbow">Ψ skitzo's repo Ψ</span> ⚡</h1>
+  <h1><span class="rotor">⚡ <span class="rainbow">Ψ skitzo's repo Ψ</span> ⚡</span></h1>
 
   <div class="chaos">
     <p class="glitch" data-text="ТВОЙ МОЗГ НЕ ГОТОВ">ТВОЙ МОЗГ НЕ ГОТОВ</p>
