@@ -12,12 +12,7 @@ html, body {
   background-size: 1200% 1200%;
   animation: bg-shift 8s ease infinite;
 }
-
-@keyframes bg-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+@keyframes bg-shift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
 h1 {
   font-family: 'Monoton', cursive;
@@ -27,15 +22,8 @@ h1 {
   text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
   animation: flicker 3s infinite alternate, spinScale 10s linear infinite;
 }
-@keyframes flicker {
-  0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
-  20%, 24%, 55% { opacity: 0.3; }
-}
-@keyframes spinScale {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.1); }
-  100% { transform: rotate(360deg) scale(1); }
-}
+@keyframes flicker { 0%,18%,22%,25%,53%,57%,100%{opacity:1} 20%,24%,55%{opacity:.3} }
+@keyframes spinScale { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.1)} 100%{transform:rotate(360deg) scale(1)} }
 
 .chaos {
   font-family: 'Press Start 2P', monospace;
@@ -47,8 +35,8 @@ h1 {
   box-shadow: 0 0 15px rgba(255,255,255,0.7);
   animation: pulse 2s infinite ease-in-out, wobble 5s infinite;
 }
-@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
-@keyframes wobble { 0%,100%{transform:rotate(0);} 25%{transform:rotate(3deg);} 75%{transform:rotate(-3deg);} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes wobble { 0%,100%{transform:rotate(0)} 25%{transform:rotate(3deg)} 75%{transform:rotate(-3deg)} }
 @media (min-width: 992px) { .chaos { max-width: 60%; } }
 
 .rainbow {
@@ -59,25 +47,18 @@ h1 {
   -webkit-text-fill-color: transparent;
   animation: rainbow-move 2s linear infinite;
 }
-@keyframes rainbow-move { 0%{background-position:0% 50%;} 100%{background-position:100% 50%;} }
+@keyframes rainbow-move { 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
 
 .glitch { position:relative; color:white; font-size:2rem; text-align:center; animation:shake 1s infinite; }
 .glitch::before, .glitch::after { content:attr(data-text); position:absolute; left:0; width:100%; }
 .glitch::before { left:2px; text-shadow:-2px 0 red; animation:glitch-anim 2s infinite linear alternate-reverse; }
 .glitch::after { left:-2px; text-shadow:-2px 0 blue; animation:glitch-anim 3s infinite linear alternate-reverse; }
-@keyframes glitch-anim {
-  0% { clip: rect(0,9999px,0,0); }
-  25% { clip: rect(0,9999px,50px,0); }
-  50% { clip: rect(0,9999px,100px,0); }
-  75% { clip: rect(0,9999px,20px,0); }
-  100% { clip: rect(0,9999px,80px,0); }
-}
-@keyframes shake { 0%,100%{transform:translate(0,0) rotate(0);} 25%{transform:translate(-2px,2px) rotate(-1deg);} 50%{transform:translate(2px,-2px) rotate(1deg);} 75%{transform:translate(-1px,1px) rotate(0);} }
+@keyframes glitch-anim { 0%{clip:rect(0,9999px,0,0)} 25%{clip:rect(0,9999px,50px,0)} 50%{clip:rect(0,9999px,100px,0)} 75%{clip:rect(0,9999px,20px,0)} 100%{clip:rect(0,9999px,80px,0)} }
+@keyframes shake { 0%,100%{transform:translate(0,0) rotate(0)} 25%{transform:translate(-2px,2px) rotate(-1deg)} 50%{transform:translate(2px,-2px) rotate(1deg)} 75%{transform:translate(-1px,1px) rotate(0)} }
 
 .matrix { font-family:monospace; white-space:pre; overflow:hidden; animation:scroll-up 8s linear infinite; }
-@keyframes scroll-up { 0%{transform:translateY(0);} 100%{transform:translateY(-100%);} }
+@keyframes scroll-up { 0%{transform:translateY(0)} 100%{transform:translateY(-100%)} }
 
-/* Сигилы — не выходят за экран */
 .sigil {
   position: fixed;
   top: 50%;
@@ -85,21 +66,17 @@ h1 {
   line-height: 1;
   color: #fff;
   opacity: .2;
-  filter: grayscale(1) contrast(1.15);
+  filter: grayscale(1) contrast(1.15) url(#sigil-warp);
   pointer-events: none;
   user-select: none;
   mix-blend-mode: screen;
-  will-change: transform;
+  will-change: filter, transform;
   contain: paint;
   transform: translateY(-50%);
 }
 .sigil-left  { left: max(1rem, env(safe-area-inset-left)); }
 .sigil-right { right: max(1rem, env(safe-area-inset-right)); }
 .sigil-center{ left:50%; transform: translate(-50%,-50%); }
-@keyframes tremble { 0%,100%{ transform: translate(var(--tx,0), var(--ty,-50%)) scale(1) rotate(0); } 50%{ transform: translate(var(--tx,0), var(--ty,-50%)) scale(1.02) rotate(-0.5deg); } }
-.sigil-left  { --tx: 0;   --ty: -50%; }
-.sigil-right { --tx: 0;   --ty: -50%; }
-.sigil-center{ --tx: -50%; --ty: -50%; }
 
 .prompt-block {
   font-family: 'Press Start 2P', monospace;
@@ -128,7 +105,6 @@ h1 {
 }
 .copy-btn:active { transform: scale(0.95); }
 
-/* Частицы — крупнее и внутри вьюпорта */
 .particle{
   position:fixed;
   z-index:9999;
