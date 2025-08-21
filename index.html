@@ -29,18 +29,15 @@
       font-size: 4rem;
       margin: 2rem 0;
       text-shadow: 0 0 5px #fff, 0 0 20px #ff00cc, 0 0 40px #ff00cc;
-      /* flicker only on the block itself */
-      animation: flicker 3s infinite alternate;
+      animation: flicker 3s infinite alternate, spinScale 10s linear infinite;
+      transform-origin: center center;
+      backface-visibility: hidden;
+      will-change: transform;
+      -webkit-transform: translateZ(0);
     }
     @keyframes flicker {
       0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
       20%, 24%, 55% { opacity: 0.3; }
-    }
-
-    /* spinner animations */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
     @keyframes spinScale {
       0% { transform: rotate(0deg) scale(1); }
@@ -48,26 +45,13 @@
       100% { transform: rotate(360deg) scale(1); }
     }
 
-    /* rotor element inside H1 does the transform */
-    .rotor {
-      display: inline-block;
-      transform-origin: center center;
-      backface-visibility: hidden;
-      will-change: transform;
-      animation: spinScale 10s linear infinite;
-    }
-    /* phones: rotate only */
-    @media (max-width: 768px) { .rotor { animation: spin 10s linear infinite; } }
-    /* small-height landscape phones */
-    @media (orientation: landscape) and (max-height: 480px) { .rotor { animation: spin 8s linear infinite; } }
-
     .chaos {
       font-family: 'Press Start 2P', monospace;
       padding: 1rem;
       border-radius: 12px;
       background: rgba(0,0,0,0.3);
       margin: 1rem auto;
-      max-width: 90%; /* mobile-first width kept */
+      max-width: 90%;
       box-shadow: 0 0 15px rgba(255,255,255,0.7);
       animation: pulse 2s infinite ease-in-out, wobble 5s infinite;
     }
@@ -81,7 +65,6 @@
       75% { transform: rotate(-3deg); }
     }
 
-    /* Desktop-only: slightly narrower frames */
     @media (min-width: 992px) {
       .chaos { max-width: 60%; }
     }
@@ -161,7 +144,6 @@
       100% { transform: translateY(-100%); }
     }
 
-    /* Lightweight black-and-white occult sigils */
     .sigil {
       position: fixed;
       top: 50%;
@@ -187,13 +169,54 @@
     }
     .sigil-center { --tx: -50%; --ty: -50%; }
 
+    .prompt-block {
+      font-family: 'Press Start 2P', monospace;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.5);
+      margin: 1rem auto;
+      max-width: 90%;
+      box-shadow: 0 0 15px rgba(255,255,255,0.7);
+      position: relative;
+    }
+    .prompt-header {
+      font-size: 1.2rem;
+      margin-bottom: .5rem;
+      color: #0ff;
+    }
+    .prompt-text {
+      font-size: .8rem;
+      white-space: pre-wrap;
+      background: rgba(0,0,0,0.3);
+      padding: .5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .copy-btn {
+      font-family: 'Press Start 2P', monospace;
+      position: absolute;
+      bottom: .5rem;
+      right: .5rem;
+      font-size: .7rem;
+      background: #111;
+      color: #fff;
+      border: 1px solid #fff;
+      padding: .3rem .6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .copy-btn:hover {
+      background: #333;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; }
     }
   </style>
 </head>
 <body>
-  <h1><span class="rotor">⚡ <span class="rainbow">Ψ skitzo's repo Ψ</span> ⚡</span></h1>
+  <h1>⚡ <span class="rainbow">Ψ skitzo's repo Ψ</span> ⚡</h1>
 
   <div class="chaos">
     <p class="glitch" data-text="ТВОЙ МОЗГ НЕ ГОТОВ">ТВОЙ МОЗГ НЕ ГОТОВ</p>
@@ -209,11 +232,12 @@
     ズズズズズズズズズズズ  
   </div>
 
-  <div class="chaos">
-    <p class="rainbow">press F</p>
+  <div class="prompt-block">
+    <div class="prompt-header">✨ Промт для гуманизации текстов ChatGPT ✨</div>
+    <pre class="prompt-text" id="promptContent">{ "context": "Write clear, simple, human text. No AI clichés, hype, or buzzwords.", "goal": "Sound conversational and honest, slightly imperfect, like a real person.", "rules": { "style": "Active voice ≥50%, cut filler, okay to start with 'and'/'but', casual grammar allowed, clarity > polish.", "sentences": "Mix: 25–35% short (5–10 words), 40–50% medium (11–20), 20–25% long (21–35), plus 1 very short (1–3 words) every 2–3 paragraphs.", "paragraphs": "10–15% short (1–2 sentences), 70% medium (3–6), 15–20% long (7–10).", "tone": "≥80% neutral, ≤20% light casual, 0% slang.", "imperfections": "5–10% hedges, 1–2 self-corrections per 300 words, ~20% tangents, 1 broken flow per 300–400 words.", "personalization": "Add a short reaction/anecdote every 200–250 words.", "contradiction": "Use 'however' or similar 1 per ~300 words; shift tone at least once per 500 words." }, "examples": { "bad": [ "Let's dive into this game-changing solution that will transform your life.", "This revolutionary product will unleash your potential." ], "good": [ "Here's how it works.", "This product can help you." ] } }</pre>
+    <button class="copy-btn" onclick="copyPrompt()">Copy</button>
   </div>
 
-  <!-- Occult sigils, pure text for zero asset cost -->
   <div class="sigil sigil-left" aria-hidden="true">⛧</div>
   <div class="sigil sigil-center" aria-hidden="true">☽☯☾</div>
   <div class="sigil sigil-right" aria-hidden="true">☥</div>
@@ -240,7 +264,6 @@
       }
 
       document.addEventListener('keydown', function (event) {
-        // Физическая клавиша F, не зависит от раскладки
         if (event.code === 'KeyF' && !isEditable(event.target)) {
           event.preventDefault();
           if (!inFullscreen()) {
@@ -251,34 +274,15 @@
         }
       });
     })();
-  </script>
-  <script>
-    // Mobile Safari иногда «застывает» на комбинированных анимациях
-    // Форсим перезапуск и подстраиваемся под ориентацию/размер
-    (function(){
-      var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-      function preferNoMotion(){ return mqReduce && mqReduce.matches; }
-      function isPhoneMode(){
-        return window.matchMedia('(max-width: 768px)').matches ||
-               window.matchMedia('(orientation: landscape) and (max-height: 480px)').matches;
-      }
-      function applyRotorAnim(){
-        if (preferNoMotion()) return; // уважаем системную настройку
-        var r = document.querySelector('.rotor');
-        if (!r) return;
-        // сбросить и заново назначить, чтобы iOS запустил анимацию
-        r.style.animation = 'none';
-        // reflow
-        void r.offsetHeight;
-        r.style.animation = (isPhoneMode() ? 'spin 10s linear infinite' : 'spinScale 10s linear infinite');
-      }
-      var deb;
-      function onResize(){ clearTimeout(deb); deb = setTimeout(applyRotorAnim, 100); }
-      document.addEventListener('DOMContentLoaded', applyRotorAnim);
-      window.addEventListener('orientationchange', onResize);
-      window.addEventListener('resize', onResize);
-      document.addEventListener('visibilitychange', function(){ if (!document.hidden) applyRotorAnim(); });
-    })();
+
+    function copyPrompt() {
+      const content = document.getElementById('promptContent').innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        alert('Промт скопирован!');
+      }).catch(err => {
+        console.error('Ошибка копирования', err);
+      });
+    }
   </script>
 </body>
 </html>
