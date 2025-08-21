@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
 
-body {
+html, body {
   margin: 0;
   padding: 0;
+  max-width: 100%;
+  overflow-x: hidden; /* фикс ширины на айфоне */
+  color: #fff;
+  font-family: 'Rubik Glitch', cursive;
   background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc, #ff6600, #ff0000, #00ff99);
   background-size: 1200% 1200%;
   animation: bg-shift 8s ease infinite;
-  overflow-x: hidden;
-  color: #fff;
-  font-family: 'Rubik Glitch', cursive;
 }
+
 @keyframes bg-shift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -138,7 +140,7 @@ h1 {
 
 @keyframes tremble {
   0%,100% { transform: translate(-50%,-50%) scale(1); }
-  50% { transform: translate(-48%,-52%) scale(1.02); }
+  50% { transform: translate(calc(-50% + 1px), calc(-50% + 1px)) scale(1.02); }
 }
 
 .prompt-block {
@@ -179,16 +181,18 @@ h1 {
 }
 .copy-btn:active { transform: scale(0.95); }
 
+/* частицы больше и не раздувают ширину */
 .particle {
   position: fixed;
   z-index: 9999;
-  width: 6px;
-  height: 6px;
+  width: 8px;   /* было 6 */
+  height: 8px;  /* было 6 */
   border-radius: 50%;
   pointer-events: none;
   animation: puff 600ms ease-out forwards;
+  transform: translate(-50%, -50%);
 }
 @keyframes puff {
-  from { transform: translate(0,0) scale(1); opacity:1; }
-  to   { transform: translate(var(--dx), var(--dy)) scale(.6); opacity:0; }
+  from { transform: translate(-50%,-50%) scale(1); opacity:1; }
+  to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.6); opacity:0; }
 }
