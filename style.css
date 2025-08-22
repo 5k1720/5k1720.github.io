@@ -70,13 +70,24 @@ h1{
 }
 
 .sigil{
-  position:fixed;top:50%;font-size:clamp(24px,4vw,64px);line-height:1;color:#fff;opacity:.2;
-  filter:grayscale(1) contrast(1.15) url(#sigil-warp);pointer-events:none;user-select:none;
-  mix-blend-mode:screen;will-change:filter,transform;contain:paint;transform:translateY(-50%)
+  position:fixed;
+  top:50%;
+  font-size:clamp(24px,4vw,64px);
+  line-height:1;
+  color:#fff;
+  opacity:.2;
+  filter:grayscale(1) contrast(1.15);
+  pointer-events:none;
+  user-select:none;
+  mix-blend-mode:screen;
+  will-change:filter,transform;
+  contain:paint;
+  transform:translateY(-50%);
 }
 .sigil-left{left:max(1rem,env(safe-area-inset-left))}
 .sigil-right{right:max(1rem,env(safe-area-inset-right))}
 .sigil-center{left:50%;transform:translate(-50%,-50%)}
+
 
 .prompt-block{
   font-family:'Press Start 2P',monospace;padding:1rem;border-radius:12px;background:rgba(0,0,0,.5);
