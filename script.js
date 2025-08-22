@@ -1,118 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
-
-*{box-sizing:border-box}
-:root,html,body{width:100%;max-width:100%;overflow-x:hidden}
-html,body{
-  margin:0;padding:0;color:#fff;font-family:'Rubik Glitch',cursive;
-  background:linear-gradient(270deg,#ff00cc,#3333ff,#00ffcc,#ff6600,#ff0000,#00ff99);
-  background-size:1200% 1200%;
-  animation:bg-shift 8s ease infinite
+function copyPrompt(btn){
+  const text=document.getElementById('promptContent').textContent;
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.setAttribute('readonly','');ta.style.position='absolute';ta.style.left='-9999px';
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
+  showCopiedMsg();spawnParticles(btn)
 }
-@keyframes bg-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-
-h1{
-  font-family:'Monoton',cursive;text-align:center;font-size:4rem;margin:2rem 0;
-  text-shadow:0 0 5px #fff,0 0 20px #ff00cc,0 0 40px #ff00cc;
-  animation:flicker 3s infinite alternate,spinScale 10s linear infinite
+function showCopiedMsg(){
+  const el=document.createElement('div');el.textContent='✓ Copied';
+  Object.assign(el.style,{position:'fixed',bottom:'10%',right:'10%',background:'rgba(0,0,0,0.8)',color:'#0f0',padding:'6px 12px',borderRadius:'6px',fontFamily:'Press Start 2P, monospace',fontSize:'0.7rem',zIndex:10000,opacity:'1',transition:'opacity 1s ease-out'});
+  document.body.appendChild(el);setTimeout(()=>el.style.opacity='0',800);setTimeout(()=>el.remove(),1800)
 }
-@keyframes flicker{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.3}}
-@keyframes spinScale{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
-
-.chaos{
-  font-family:'Press Start 2P',monospace;padding:1rem;border-radius:12px;background:rgba(0,0,0,.3);
-  margin:1rem auto;max-width:90%;box-shadow:0 0 15px rgba(255,255,255,.7);
-  animation:pulse 2s infinite ease-in-out,wobble 5s infinite
+function spawnParticles(btn){
+  const r=btn.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+  let x=r.left+r.width/2,y=r.top+r.height/2;x=Math.min(vw-2,Math.max(2,x));y=Math.min(vh-2,Math.max(2,y));
+  const n=18,edge=Math.min(x,vw-x,y,vh-y)-6,max=Math.max(32,Math.min(80,edge));
+  for(let i=0;i<n;i++){const p=document.createElement('span');p.className='particle';
+    const a=Math.random()*2*Math.PI,d=Math.random()*max,dx=Math.cos(a)*d,dy=Math.sin(a)*d;
+    p.style.setProperty('--dx',dx+'px');p.style.setProperty('--dy',dy+'px');p.style.left=x+'px';p.style.top=y+'px';
+    const s=6+Math.random()*6;p.style.width=s+'px';p.style.height=s+'px';p.style.background=`hsl(${Math.floor(Math.random()*360)},100%,60%)`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),700)}
 }
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(3deg)}75%{transform:rotate(-3deg)}}
-@media (min-width:992px){.chaos{max-width:60%}}
-
-.rainbow{display:inline-block;background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
-  background-size:400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:rainbow-move 2s linear infinite}
-@keyframes rainbow-move{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-
-.glitch{position:relative;color:#fff;font-size:2rem;text-align:center;animation:shake 1s infinite}
-.glitch::before,.glitch::after{content:attr(data-text);position:absolute;left:0;width:100%}
-.glitch::before{left:2px;text-shadow:-2px 0 red;animation:glitch-anim 2s infinite linear alternate-reverse}
-.glitch::after{left:-2px;text-shadow:-2px 0 blue;animation:glitch-anim 3s infinite linear alternate-reverse}
-@keyframes glitch-anim{0%{clip:rect(0,9999px,0,0)}25%{clip:rect(0,9999px,50px,0)}50%{clip:rect(0,9999px,100px,0)}75%{clip:rect(0,9999px,20px,0)}100%{clip:rect(0,9999px,80px,0)}}
-@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,2px) rotate(-1deg)}50%{transform:translate(2px,-2px) rotate(1deg)}75%{transform:translate(-1px,1px) rotate(0)}}
-
-.matrix{font-family:monospace;white-space:pre;overflow:hidden}
-.sticky{position:sticky;top:0;z-index:5}
-.tilt{transform-style:preserve-3d;will-change:transform;animation:bob 6s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-
-.glass{
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:16px;
-  -webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
-  position:relative;overflow:hidden
-}
-.glass::after{
-  content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);
-  background-size:3px 3px;pointer-events:none;mix-blend-mode:overlay
-}
-
-.liquid{
-  display:inline-block;background:
-    radial-gradient(60% 120% at 20% 50%,#fff 0%,transparent 60%),
-    radial-gradient(50% 120% at 80% 50%,#fff 0%,transparent 60%),
-    conic-gradient(from 0deg,#ff00cc,#3333ff,#00ffcc,#ff6600,#ff0000,#00ff99,#ff00cc);
-  background-size:200% 200%,200% 200%,200% 200%;
-  background-position:0% 50%,100% 50%,50% 50%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  animation:liquid-shift 7s ease-in-out infinite
-}
-@keyframes liquid-shift{
-  0%{background-position:0% 50%,100% 50%,50% 50%}
-  50%{background-position:100% 50%,0% 50%,60% 40%}
-  100%{background-position:0% 50%,100% 50%,50% 50%}
-}
-
-.sigil{
-  position:fixed;top:50%;font-size:clamp(24px,4vw,64px);line-height:1;color:#fff;opacity:.2;
-  filter:grayscale(1) contrast(1.15) url(#sigil-warp);pointer-events:none;user-select:none;
-  mix-blend-mode:screen;will-change:filter,transform;contain:paint;transform:translateY(-50%)
-}
-.sigil-left{left:max(1rem,env(safe-area-inset-left))}
-.sigil-right{right:max(1rem,env(safe-area-inset-right))}
-.sigil-center{left:50%;transform:translate(-50%,-50%)}
-
-.prompt-block{
-  font-family:'Press Start 2P',monospace;padding:1rem;border-radius:12px;background:rgba(0,0,0,.5);
-  margin:1rem auto;max-width:90%;box-shadow:0 0 15px rgba(255,255,255,.7);position:relative
-}
-.prompt-header{font-size:1.2rem;margin-bottom:.5rem;color:#0ff}
-.prompt-text{font-size:.8rem;white-space:pre-wrap;background:rgba(0,0,0,.3);padding:.5rem;border-radius:8px;overflow-x:auto}
-.copy-btn{
-  font-family:'Press Start 2P',monospace;position:absolute;bottom:.5rem;right:.5rem;font-size:.7rem;
-  background:#111;color:#fff;border:1px solid #fff;padding:.3rem .6rem;border-radius:6px;cursor:pointer
-}
-.copy-btn:active{transform:scale(.95)}
-
-.particle{
-  position:fixed;z-index:9999;width:8px;height:8px;border-radius:50%;pointer-events:none;
-  transform:translate(-50%,-50%);animation:puff 600ms ease-out forwards;contain:paint
-}
-@keyframes puff{
-  from{transform:translate(-50%,-50%) scale(1);opacity:1}
-  to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.6);opacity:0}
-}
-
-.blobs{position:fixed;inset:auto 0 0 0;height:45vh;z-index:0;pointer-events:none;filter:blur(30px);opacity:.25}
-.blob{position:absolute;border-radius:40% 60% 50% 50%/60% 40% 60% 40%;mix-blend-mode:screen}
-.b1{left:10%;bottom:-10%;width:40vmin;height:40vmin;background:#ff00cc;animation:blob1 18s ease-in-out infinite}
-.b2{left:40%;bottom:-15%;width:45vmin;height:45vmin;background:#3333ff;animation:blob2 22s ease-in-out infinite}
-.b3{right:8%;bottom:-12%;width:38vmin;height:38vmin;background:#00ffcc;animation:blob3 20s ease-in-out infinite}
-@keyframes blob1{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-6vmin) scale(1.05)}
-}
-@keyframes blob2{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-8vmin) scale(1.08)}
-}
-@keyframes blob3{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-5vmin) scale(1.04)}
-}
+(function(){
+  const el=document.querySelector('.tilt');if(!el)return;
+  let px=0,py=0;
+  function set(tX,tY){el.style.transform=`translateY(${py}px) rotateX(${tY}deg) rotateY(${tX}deg)`;}
+  function onMove(e){
+    const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+    const x=(e.clientX-cx)/r.width,y=(e.clientY-cy)/r.height;
+    const rx=(x*8),ry=(-y*8);set(rx,ry)
+  }
+  function onOrient(e){
+    const rx=(e.gamma||0)/8,ry=-(e.beta||0)/12;set(rx,ry)
+  }
+  el.addEventListener('mousemove',onMove);
+  if(window.DeviceOrientationEvent){window.addEventListener('deviceorientation',onOrient)}
+})();
