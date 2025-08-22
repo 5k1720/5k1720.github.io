@@ -1,3 +1,4 @@
+// script.js
 function copyPrompt(btn){
   const text=document.getElementById('promptContent').textContent;
   const ta=document.createElement('textarea');
