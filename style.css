@@ -1,4 +1,3 @@
-/* style.css */
 @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Press+Start+2P&family=Rubik+Glitch&display=swap');
 
 *{box-sizing:border-box}
@@ -70,6 +69,50 @@ h1{
   100%{background-position:0% 50%,100% 50%,50% 50%}
 }
 
-.sigils{display:flex;gap:1rem;justify-content:center;font-size:2rem;margin:1rem}
-.sigil{opacity:.8;transition:.3s}
-.sigil:hover{opacity:1;transform:scale(1.3)}
+.sigil{
+  position:fixed;top:50%;font-size:clamp(24px,4vw,64px);line-height:1;color:#fff;opacity:.2;
+  filter:grayscale(1) contrast(1.15) url(#sigil-warp);pointer-events:none;user-select:none;
+  mix-blend-mode:screen;will-change:filter,transform;contain:paint;transform:translateY(-50%)
+}
+.sigil-left{left:max(1rem,env(safe-area-inset-left))}
+.sigil-right{right:max(1rem,env(safe-area-inset-right))}
+.sigil-center{left:50%;transform:translate(-50%,-50%)}
+
+.prompt-block{
+  font-family:'Press Start 2P',monospace;padding:1rem;border-radius:12px;background:rgba(0,0,0,.5);
+  margin:1rem auto;max-width:90%;box-shadow:0 0 15px rgba(255,255,255,.7);position:relative
+}
+.prompt-header{font-size:1.2rem;margin-bottom:.5rem;color:#0ff}
+.prompt-text{font-size:.8rem;white-space:pre-wrap;background:rgba(0,0,0,.3);padding:.5rem;border-radius:8px;overflow-x:auto}
+.copy-btn{
+  font-family:'Press Start 2P',monospace;position:absolute;bottom:.5rem;right:.5rem;font-size:.7rem;
+  background:#111;color:#fff;border:1px solid #fff;padding:.3rem .6rem;border-radius:6px;cursor:pointer
+}
+.copy-btn:active{transform:scale(.95)}
+
+.particle{
+  position:fixed;z-index:9999;width:8px;height:8px;border-radius:50%;pointer-events:none;
+  transform:translate(-50%,-50%);animation:puff 600ms ease-out forwards;contain:paint
+}
+@keyframes puff{
+  from{transform:translate(-50%,-50%) scale(1);opacity:1}
+  to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.6);opacity:0}
+}
+
+.blobs{position:fixed;inset:auto 0 0 0;height:45vh;z-index:0;pointer-events:none;filter:blur(30px);opacity:.25}
+.blob{position:absolute;border-radius:40% 60% 50% 50%/60% 40% 60% 40%;mix-blend-mode:screen}
+.b1{left:10%;bottom:-10%;width:40vmin;height:40vmin;background:#ff00cc;animation:blob1 18s ease-in-out infinite}
+.b2{left:40%;bottom:-15%;width:45vmin;height:45vmin;background:#3333ff;animation:blob2 22s ease-in-out infinite}
+.b3{right:8%;bottom:-12%;width:38vmin;height:38vmin;background:#00ffcc;animation:blob3 20s ease-in-out infinite}
+@keyframes blob1{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-6vmin) scale(1.05)}
+}
+@keyframes blob2{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-8vmin) scale(1.08)}
+}
+@keyframes blob3{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-5vmin) scale(1.04)}
+}
