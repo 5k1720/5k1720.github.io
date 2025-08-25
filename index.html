@@ -23,8 +23,98 @@
   </div>
 
   <div class="prompt-block">
-    <div class="prompt-header">✨ Prompt for humanizing ChatGPT texts / Промт для гуманизации текстов ChatGPT </div>
+    <div class="prompt-header">✨ Prompt for humanizing ChatGPT texts / Промт для гуманизации текстов ChatGPT</div>
     <pre class="prompt-text" id="promptContent">{ "context": "Write clear, simple, human text. No AI clichés, hype, or buzzwords.", "goal": "Sound conversational and honest, slightly imperfect, like a real person.", "rules": { "style": "Active voice ≥50%, cut filler, okay to start with 'and'/'but', casual grammar allowed, clarity > polish.", "sentences": "Mix: 25–35% short (5–10 words), 40–50% medium (11–20), 20–25% long (21–35), plus 1 very short (1–3 words) every 2–3 paragraphs.", "paragraphs": "10–15% short (1–2 sentences), 70% medium (3–6), 15–20% long (7–10).", "tone": "≥80% neutral, ≤20% light casual, 0% slang.", "imperfections": "5–10% hedges, 1–2 self-corrections per 300 words, ~20% tangents, 1 broken flow per 300–400 words.", "personalization": "Add a short reaction/anecdote every 200–250 words.", "contradiction": "Use 'however' or similar 1 per ~300 words; shift tone at least once per 500 words." }, "examples": { "bad": [ "Let's dive into this game-changing solution that will transform your life.", "This revolutionary product will unleash your potential." ], "good": [ "Here's how it works.", "This product can help you." ] } }</pre>
+    <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+  </div>
+
+  <div class="prompt-block">
+    <div class="prompt-header">✨ Современный промт для прокачки копирайтинга</div>
+    <pre class="prompt-text">{
+  "style_profile": {
+    "name": "современный промт для прокачки копирайтинга",
+    "language": "ru",
+    "tone": {
+      "people_first": true,
+      "plain_speech": true,
+      "light_irony_allowed": true,
+      "no_officialese": true
+    },
+    "formatting": {
+      "mobile_scan": true,
+      "paragraph_max_lines": 4,
+      "one_idea_per_paragraph": true,
+      "use_subheadings": true,
+      "use_lists": true
+    },
+    "structure": {
+      "storytelling": ["завязка", "проблема", "решение", "доказательства", "вывод"],
+      "one_problem_one_solution": true,
+      "solve_client_problem": true,
+      "lead_with_answer": true
+    },
+    "evidence_and_trust": {
+      "show_author": true,
+      "show_expertise": true,
+      "require_sources_or_method": true,
+      "include_limits_if_uncertain": true
+    },
+    "seo": {
+      "natural_keywords": true,
+      "no_keyword_stuffing": true,
+      "meta_description_max_chars": 150,
+      "internal_links_strategy": "минимально и по делу"
+    },
+    "ai_usage": {
+      "allowed": true,
+      "use_cases": ["черновик", "структура", "варианты формулировок", "упрощение текста"],
+      "human_edit_required": true,
+      "disclosure_required": true,
+      "disclosure_text": "В подготовке текста использовался искусственный интеллект; материал проверен и доработан редактором.",
+      "recommended_human_AI_mix": "60-70% человек / 30-40% ИИ",
+      "avoid": ["массовая генерация под SEO без ценности", "автопостинг без проверки", "галлюцинации и неподтверждённые факты"]
+    },
+    "personalization": {
+      "audience_levels": ["новичок", "продвинутый"],
+      "adapt_for_time_poor_reader": true,
+      "zero_party_data_hooks": true
+    },
+    "power_words": {
+      "эмоции": ["сенсация", "вдохновляющий", "увлекательный", "откровенный", "живой"],
+      "доверие": ["проверенный", "гарантированный", "официальный", "честный", "доказанный", "прозрачный", "экспертный"],
+      "срочность": ["сейчас", "только сегодня", "последний шанс", "ограниченный", "срочно"],
+      "действие": ["узнай", "начни", "получи", "сделай", "примени", "открой"],
+      "выгода": ["бесплатно", "скидка", "подарок", "экономия", "уникальный", "выгодно"]
+    },
+    "length_limits": {
+      "default_words": "150-200",
+      "max_words": 300,
+      "headline_max_words": 10
+    },
+    "outputs": {
+      "deliver": ["основной текст", "краткое резюме первого экрана"],
+      "first_screen_summary": true,
+      "cta_style": "мягкий, ценностный, без давления"
+    },
+    "prohibited": [
+      "кликбейт без фактов",
+      "переспам ключевыми словами",
+      "пустые обещания",
+      "канцелярит и штампы"
+    ],
+    "review_checklist": [
+      "Есть ли ясный ответ в первом экране?",
+      "Структура storytelling соблюдена?",
+      "Факты подтверждены, показаны источники/метод?",
+      "Текст решает проблему клиента?",
+      "Текст читабелен на телефоне (абзацы до 4 строк)?",
+      "Одна задача решена целиком?",
+      "Power words использованы уместно и умеренно?",
+      "Есть прозрачность об участии ИИ?",
+      "Есть мягкий CTA и хук на zero/first-party data?"
+    ]
+  }
+}</pre>
     <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
   </div>
 
