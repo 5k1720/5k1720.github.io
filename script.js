@@ -1,5 +1,7 @@
 function copyPrompt(btn){
-  const text=document.getElementById('promptContent').textContent;
+  const wrap = btn.closest('.prompt-block');
+  const src = wrap ? wrap.querySelector('.prompt-text') : document.getElementById('promptContent');
+  const text = src ? src.textContent : '';
   const ta=document.createElement('textarea');
   ta.value=text;ta.setAttribute('readonly','');ta.style.position='absolute';ta.style.left='-9999px';
   document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
