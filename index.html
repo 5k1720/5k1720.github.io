@@ -119,8 +119,77 @@
   </div>
 
   <div class="prompt-block">
-    <div class="prompt-header">✨ Шаблон промта</div>
-    <pre class="prompt-text">ТЕКСТ</pre>
+    <div class="prompt-header">✨ Более компактный и универсальный вариант</div>
+    <pre class="prompt-text">{
+  "flexible_style_profile": {
+    "core": {
+      "plain_speech": true,
+      "short_paragraphs": true,
+      "mobile_scan": true,
+      "subheadings": true,
+      "one_idea_per_paragraph": true
+    },
+    "tracks": {
+      "storytelling": {
+        "enabled": false,
+        "structure": ["завязка", "проблема", "решение", "доказательства", "вывод"],
+        "use_cases": ["статьи", "обзоры", "разборы проблем"]
+      },
+      "tech_specs": {
+        "enabled": false,
+        "position": "bottom",
+        "format": "list",
+        "use_cases": ["карточки товаров", "обзоры устройств"]
+      },
+      "trust_and_evidence": {
+        "enabled": true,
+        "methods": ["сверка с официальными источниками", "честные ограничения"],
+        "use_cases": ["товары", "инструкции", "обзоры"]
+      },
+      "seo": {
+        "enabled": true,
+        "keywords": "естественные",
+        "meta_description_max": 150,
+        "use_cases": ["статьи", "обзоры", "товары"]
+      },
+      "tone": {
+        "friendly": true,
+        "light_irony": true,
+        "people_first": true,
+        "power_words": {
+          "эмоции": ["живой", "откровенный"],
+          "доверие": ["честный", "гарантированный"],
+          "выгода": ["выгодно", "уникальный"]
+        },
+        "use_cases": ["статьи", "карточки товаров"]
+      },
+      "cta": {
+        "enabled": false,
+        "style": "мягкий и ценностный",
+        "use_cases": ["товары", "продающие тексты"]
+      },
+      "google_safe": {
+        "enabled": true,
+        "principles": [
+          "избегать шаблонных и пустых фраз",
+          "каждый текст должен содержать уникальную ценность",
+          "ИИ может быть инструментом, но текст обязан быть доработан человеком",
+          "сильные тексты — полезные и экспертные, слабые блокируются поиском"
+        ],
+        "use_cases": ["любые тексты для публикации в интернете"]
+      }
+    },
+    "flexibility": {
+      "mixing": "каждый блок можно комбинировать или отключать",
+      "granularity": "каждый абзац может использовать только нужные треки",
+      "modes": {
+        "product_card": ["tech_specs", "trust_and_evidence", "tone", "cta", "google_safe"],
+        "howto_article": ["storytelling", "trust_and_evidence", "tone", "seo", "google_safe"],
+        "review": ["storytelling", "tech_specs", "trust_and_evidence", "tone", "seo", "google_safe"]
+      }
+    }
+  }
+}</pre>
     <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
   </div>
 
