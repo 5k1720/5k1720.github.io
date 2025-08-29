@@ -121,75 +121,90 @@
   <div class="prompt-block">
     <div class="prompt-header">✨ Более компактный и универсальный вариант</div>
     <pre class="prompt-text">{
-  "flexible_style_profile": {
-    "core": {
+  "style_profile": {
+    "name": "современный промт для прокачки копирайтинга (упрощённый)",
+    "language": "ru",
+    "tone": {
+      "people_first": true,
       "plain_speech": true,
-      "short_paragraphs": true,
+      "light_irony_allowed": true,
+      "no_officialese": true
+    },
+    "formatting": {
       "mobile_scan": true,
-      "subheadings": true,
-      "one_idea_per_paragraph": true
+      "paragraph_max_lines": 4,
+      "one_idea_per_paragraph": true,
+      "use_subheadings": false,
+      "use_lists": true
     },
-    "tracks": {
-      "storytelling": {
-        "enabled": false,
-        "structure": ["завязка", "проблема", "решение", "доказательства", "вывод"],
-        "use_cases": ["статьи", "обзоры", "разборы проблем"]
-      },
-      "tech_specs": {
-        "enabled": false,
-        "position": "bottom",
-        "format": "list",
-        "use_cases": ["карточки товаров", "обзоры устройств"]
-      },
-      "trust_and_evidence": {
-        "enabled": true,
-        "methods": ["сверка с официальными источниками", "честные ограничения"],
-        "use_cases": ["товары", "инструкции", "обзоры"]
-      },
-      "seo": {
-        "enabled": true,
-        "keywords": "естественные",
-        "meta_description_max": 150,
-        "use_cases": ["статьи", "обзоры", "товары"]
-      },
-      "tone": {
-        "friendly": true,
-        "light_irony": true,
-        "people_first": true,
-        "power_words": {
-          "эмоции": ["живой", "откровенный"],
-          "доверие": ["честный", "гарантированный"],
-          "выгода": ["выгодно", "уникальный"]
-        },
-        "use_cases": ["статьи", "карточки товаров"]
-      },
-      "cta": {
-        "enabled": false,
-        "style": "мягкий и ценностный",
-        "use_cases": ["товары", "продающие тексты"]
-      },
-      "google_safe": {
-        "enabled": true,
-        "principles": [
-          "избегать шаблонных и пустых фраз",
-          "каждый текст должен содержать уникальную ценность",
-          "ИИ может быть инструментом, но текст обязан быть доработан человеком",
-          "сильные тексты — полезные и экспертные, слабые блокируются поиском"
-        ],
-        "use_cases": ["любые тексты для публикации в интернете"]
-      }
+    "structure": {
+      "storytelling": ["завязка", "проблема", "решение", "доказательства", "вывод"],
+      "one_problem_one_solution": true,
+      "solve_client_problem": true,
+      "lead_with_answer": true
     },
-    "flexibility": {
-      "mixing": "каждый блок можно комбинировать или отключать",
-      "granularity": "каждый абзац может использовать только нужные треки",
-      "modes": {
-        "product_card": ["tech_specs", "trust_and_evidence", "tone", "cta", "google_safe"],
-        "howto_article": ["storytelling", "trust_and_evidence", "tone", "seo", "google_safe"],
-        "review": ["storytelling", "tech_specs", "trust_and_evidence", "tone", "seo", "google_safe"]
-      }
-    }
+    "evidence_and_trust": {
+      "show_author": false,
+      "show_expertise": true,
+      "require_sources_or_method": false,
+      "include_limits_if_uncertain": true
+    },
+    "seo": {
+      "natural_keywords": true,
+      "no_keyword_stuffing": true,
+      "meta_description_max_chars": null,
+      "internal_links_strategy": "не использовать"
+    },
+    "ai_usage": {
+      "allowed": true,
+      "use_cases": ["черновик", "структура", "варианты формулировок", "упрощение текста"],
+      "human_edit_required": true,
+      "disclosure_required": false,
+      "disclosure_text": null,
+      "recommended_human_AI_mix": "60-70% человек / 30-40% ИИ",
+      "avoid": ["массовая генерация под SEO без ценности", "автопостинг без проверки", "галлюцинации и неподтверждённые факты"]
+    },
+    "personalization": {
+      "audience_levels": ["новичок", "продвинутый"],
+      "adapt_for_time_poor_reader": true,
+      "zero_party_data_hooks": false
+    },
+    "power_words": {
+      "эмоции": ["сенсация", "вдохновляющий", "увлекательный", "живой"],
+      "доверие": ["проверенный", "гарантированный", "честный", "доказанный"],
+      "срочность": ["ограниченный", "последний шанс"],
+      "действие": ["узнай", "открой", "получи"],
+      "выгода": ["уникальный", "выгодно", "подарок"]
+    },
+    "length_limits": {
+      "default_words": "150-200",
+      "max_words": 300,
+      "headline_max_words": 10
+    },
+    "outputs": {
+      "deliver": ["основной текст"],
+      "first_screen_summary": false,
+      "cta_style": "мягкий, ценностный, без давления"
+    },
+    "prohibited": [
+      "кликбейт без фактов",
+      "переспам ключевыми словами",
+      "пустые обещания",
+      "канцелярит и штампы"
+    ],
+    "review_checklist": [
+      "Есть ли ясный ответ в первом абзаце?",
+      "Структура storytelling соблюдена?",
+      "Факты проверены и точные?",
+      "Текст решает проблему клиента?",
+      "Текст читабелен на телефоне (абзацы до 4 строк)?",
+      "Одна задача решена целиком?",
+      "Power words использованы уместно?",
+      "Есть мягкий CTA?"
+    ]
   }
-}</pre>
+}
+</pre>
     <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
   </div>
 
