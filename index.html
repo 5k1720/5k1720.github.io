@@ -272,27 +272,277 @@
 
   
   <div class="prompt-block">
-    <div class="prompt-header">✨ Промт для SEO‑текста под ТЗ (без галлюцинаций)</div>
-    <pre class="prompt-text">{
-  "task": "Напиши статью/описание в соответствии с техническим заданием SEO-специалиста.",
-  "language": "ru",
-  "inputs": {
-    "topic": "&lt;тема&gt;",
-    "target_queries": ["&lt;ключ1&gt;", "&lt;ключ2&gt;"],
-    "region": "&lt;регион/страна&gt;",
-    "page_goal": "трафик / лиды / информирование",
-    "product_or_service": "&lt;что продвигаем&gt;",
-    "constraints": ["без воды", "факты проверены", "никаких обещаний без доказательств"]
-  },
-  "rules": {
-    "evidence": "сверять характеристики и факты по официальным источникам производителя/провайдера; если факт не подтверждён, пометить как [НЕПОДТВЕРЖДЕНО]",
-    "structure": ["краткий ответ сверху", "основной текст с подзаголовками", "FAQ 3–5 вопросов", "итог и CTA"],
-    "readability": {"mobile_first": true, "paragraph_max_lines": 4},
-    "style": {"plain_speech": true, "officialese": false, "light_irony": false},
-    "seo": {"natural_keywords": true, "no_keyword_stuffing": true, "meta_description": true, "internal_links": "по делу"},
-    "outputs": ["заголовок H1", "описание (meta)", "структурированный текст", "FAQ", "список источников (ссылки)"]
-  }
-}</pre>
+    <div class="prompt-header">✨ Для уцененного или б/у товара с рандомизацией тона и словарем</div>
+    <pre class="prompt-text">name: save_n_sale_used_goods_superprompt_v2_2
+version: 2.2
+goal: >
+  Генерировать честные, читабельные и слегка «фирменные» описания Б/У и уценённых товаров
+  для карточек на сайте из одного поля свободного текста (raw_text).
+  Вывод — HTML с заголовком от <h2> и базовой разметкой.
+
+inputs_schema:
+  required:
+    - raw_text   # Единственный ввод. Пример: "iPhone 12 128GB, графит, экран ок, корпус с царапинами у разъёма, батарея 79%, только устройство, гарантия 30 дней, ремонтов не было"
+  optional: []   # Поля отсутствуют. Всё извлекается из raw_text.
+
+preprocessing:
+  parse_raw_text: true
+  # Ничего не додумываем. Только извлекаем явно сказанное.
+  rules:
+    - brand:
+        lexicon: ["Apple","Samsung","Xiaomi","Huawei","Google","Sony","OnePlus","Honor","Realme","Nothing","Asus","Lenovo","HP","Dell","Acer","MSI"]
+    - model_patterns:
+        apple: ["iPhone \\d{2}(?: [A-Za-z]+)?","MacBook (?:Air|Pro)(?: [0-9]{4})?","iMac(?: [0-9]{4})?","Apple Watch(?: [A-Za-z0-9 ]+)?","Mac mini(?: [0-9]{4})?"]
+        common_phone: ["(Galaxy|Redmi|Pixel|Xperia|Nord)\\b[ A-Za-z0-9+]*"]
+        common_laptop: ["(IdeaPad|ThinkPad|ZenBook|Vostro|Latitude|Pavilion|Victus|ROG)\\b[ A-Za-z0-9-]*"]
+    - storage_regex: "(?i)\\b(64|128|256|512|1024)\\s?GB\\b"
+    - color_lexicon: ["Graphite","Blue","Midnight","Starlight","Silver","Space Gray","Gold","Pacific Blue","Green","Purple","Red","Black","White","Графит","Синий","Чёрный","Белый","Зелёный","Фиолетовый","Золото","Серебро"]
+    - battery_health_regex: "(?i)\\b(\\d{2})\\s?%\\b"   # 2-значные проценты
+    - warranty_regex: "(?i)\\b(\\d{1,3})\\s?(дн(ей|я)?|месяц(ев)?|мес\\.?|нед(ел[ия])?)\\b"
+    - accessories_keys:
+        any_of: ["коробка","кабель","адаптер","наушники","только устройство","полный комплект"]
+    - repairs_history:
+        map:
+          "(?i)(не было|без ремонтов|история чистая)": "не было"
+          "(?i)замена (дисплея|экрана|АКБ|батаре[ии])|ремонт": "$MATCH"
+    - screen_defects_markers:
+        map:
+          "(?i)без (царапин|сколов|трещин)|экран ок|экран без дефектов": "none"
+          "(?i)мелк(ие)? царапин(ы)?|лёгк(ие)? след(ы)?": "minor"
+          "(?i)под камер(ой|ой фронтальной)": "noticeable_under_camera"
+          "(?i)трещин(а|ы)|скол(ы)?|битый пиксель": "cracked"
+    - body_defects_markers:
+        map:
+          "(?i)без заметных следов|аккуратн(ый|о)": "none"
+          "(?i)мелкие царапины|потёртост(и|и)": "minor"
+          "(?i)разъ(е|ё)м(а)? зарядк(и)?:?\\s?царапин(ы)?": "port_area"
+          "(?i)следы на крышке и по бокам": "mixed"
+    - condition_overall:
+        map:
+          "(?i)отличн(ое|ое состояние)": "отличное"
+          "(?i)хорош(ее|ее состояние)": "хорошее"
+          "(?i)удовлетворительн(ое|ое состояние)": "удовлетворительное"
+    - notes_extract:
+        any_of: ["Face ID","Touch ID","eSIM","две SIM","регион","iCloud","оригинал","замена на оригинал","неоригинал","True Tone","LBP","LL/A","RS/A"]
+
+randomization:
+  seed: null
+  tone_weights:
+    brand: 0.75
+    neutral: 0.2
+    service: 0.05
+  use_ironic_dry_if_service: true
+  per_block_choice: sample_one
+  shuffle_minor_lists: true
+
+tone_profiles:
+  brand:
+    description: "Дружелюбно, живо, разговорно; допустимы лёгкие мемные вставки без перебора."
+    allow_memes: true
+    max_memes_per_text: 2
+    ban_heavy_marketing: true
+  neutral:
+    description: "Спокойно и ясно; минимум мемов, но тёплая подача."
+    allow_memes: false
+    ban_heavy_marketing: true
+  service:
+    description: "Коротко и по делу. Использовать только как ироничную маску."
+    allow_memes: false
+    ban_heavy_marketing: true
+
+style_and_rules:
+  apple_naming_strict: ["iPhone","MacBook","iMac","Apple Watch","Mac mini"]
+  html_output: true
+  html_only_tags: ["h2","p","ul","li"]
+  heading_level: "h2"
+  paragraph_max_lines: 4
+  list_usage: true
+  emoji_allowed: false
+  banned_marketing_cliches:
+    - "лучшее предложение на рынке"
+    - "успей купить"
+    - "только сегодня"
+    - "удар по ценам"
+    - "хит продаж"
+    - "скидки до 90%"
+  uncertainty_flag: "[ДАННЫЕ НЕПОДТВЕРЖДЕНЫ]"
+  mobile_scan_rules:
+    paragraph_max_chars: 420
+    list_item_max_chars: 140
+    max_model_mentions: 2
+
+logic:
+  steps:
+    - parse_raw_text (mandatory) -> заполнить внутренние поля:
+        brand, model, storage, color, condition_overall, screen_defects, body_defects,
+        repairs_history, battery_health, accessories, warranty, notes,
+        is_clear_about_battery_source (по умолчанию false)
+        item_status (если встречается «уценка», иначе «Б/У»)
+    - choose_tone_by_weights
+    - set_status: "{item_status or 'Б/У'}"
+    - build_title:
+        when brand and model:
+          "{brand} {model}{storage?(' ' + storage):''}{color?(' ' + color):''} {status}"
+        else:
+          "{brand_or_generic} {model_or_category} {status} {uncertainty_flag}"
+    - paragraph_opening: choose from phrase_bank.opening by tone
+    - paragraph_condition:
+        screen: choose from phrase_bank.screen by defect level
+        body: choose from phrase_bank.body by defect level
+        repairs: choose from phrase_bank.repairs based on repairs_history
+    - paragraph_value: choose from phrase_bank.value by tone
+    - facts_list:
+        - battery_health (with guard & optional qualifier)
+        - condition_overall
+        - accessories
+        - warranty
+        - notes (only if present)
+    - seo_tail: choose from phrase_bank.seo_tail
+    - apply_ironic_dry_overlay_if_needed
+    - enforce_mobile_scan_rules
+    - run_consistency_checks
+
+guards:
+  battery_qualifiers:
+    ">=90": "сохранил высокий ресурс"
+    "80-89": "ресурс в норме для повседневных задач"
+    "70-79": "ресурс средний; ориентируйтесь на свой сценарий"
+    "<70": "ресурс сниженный; возможна потребность в замене"
+  map_from_number:
+    rule: |
+      if battery_health is number:
+        if >=90 -> ">=90"
+        elif 80<=x<=89 -> "80-89"
+        elif 70<=x<=79 -> "70-79"
+        else -> "<70"
+  add_uncertainty_if_source_unknown: true
+
+phrase_bank:
+  opening:
+    brand:
+      - "Хочешь {model} без переплаты за новый? Вот он."
+      - "Разумная покупка: {model} с нужной памятью и фирменным цветом."
+      - "{model} — практичный выбор, если важны стабильность и выгода."
+      - "Б/У, но бодрый: {model} {storage?storage:''} {color?color:''} готов к делу."
+      - "Ищете {model} с честной подачей? Перед вами как есть."
+      - "{model} с характером и без лишних драм."
+      - "То, что нужно: {model}. Честное состояние и понятный комплект."
+    neutral:
+      - "{model} в хорошем рабочем состоянии — без скрытых сюрпризов."
+      - "Практичный вариант: {model}{storage?(' ' + storage):''}{color?(' ' + color):''}."
+      - "Готов к работе {model}. Всё по фактам ниже."
+    service:
+      - "{model}. Кратко о состоянии ниже."
+  screen:
+    none:
+      - "Экран в хорошем состоянии, без заметных дефектов."
+      - "Экран без критичных следов, работает корректно."
+    minor:
+      - "На экране мелкие царапины, на работу не влияют."
+      - "Экран с лёгкими следами использования; функционально всё ок."
+    noticeable_under_camera:
+      - "На экране есть мелкие царапины и одна более заметная — под основной камерой."
+      - "Экран с мелкими отметинами; под камерой заметнее остальных."
+    cracked:
+      - "Есть серьёзные повреждения экрана {uncertainty_flag if not confirmed}."
+  body:
+    none:
+      - "Корпус аккуратный, без заметных потертостей."
+      - "По корпусу без критичных следов."
+    minor:
+      - "Корпус с лёгкими следами использования: мелкие царапины/потёртости."
+      - "Есть косметические следы — на работу не влияет."
+    port_area:
+      - "По корпусу всё ок; у разъёма зарядки — мелкие царапины."
+      - "В целом аккуратно; у коннектора заметны небольшие следы."
+    mixed:
+      - "Есть локальные следы на крышке и по бокам, критичного нет."
+  repairs:
+    none:
+      - "Ремонтов не было — устройство проверено."
+      - "История чистая: без ремонтов."
+      - "Без вмешательств сервиса, работает стабильно."
+    some:
+      - "Были работы: {repairs_history}. Всё проверено на работоспособность."
+      - "Проводился ремонт: {repairs_history}. Текущая работа — ок."
+  value:
+    brand:
+      - "Честная альтернатива новому: платите за устройство, а не за плёнку на коробке."
+      - "Хороший баланс цены и состояния. Для повседневных задач — с запасом."
+      - "Проверен сервисом, собран без сюрпризов. Покупка с понятными ожиданиями."
+      - "Выгодно и без лишнего пафоса: рабочий девайс по разумной цене."
+    neutral:
+      - "Рациональная покупка: рабочее устройство по понятной цене."
+      - "Выбор для тех, кто ценит функциональность без переплаты."
+    service:
+      - "Соотношение цена/состояние — адекватное."
+  memes_optional:
+    - "родимый"
+    - "добряк"
+    - "аккуратный трудяга"
+    - "без истерик и сюрпризов"
+    - "готов к делам"
+    - "без переплаты за новизну"
+  facts_labels:
+    battery: "Аккумулятор"
+    condition: "Состояние"
+    kit: "Комплект"
+    warranty: "Гарантия"
+    notes: "Важно"
+  ironic_dry_overlay:
+    prefaces:
+      - "Коротко, чтобы не тратить ваше время."
+      - "Факты без приукрас."
+      - "Сухая версия для занятых."
+    postscripts:
+      - "Если нужен роман, у нас есть блог. А здесь — факты."
+      - "Остальное видно по месту. Работает, и этого достаточно."
+      - "Проверили. Спим спокойно."
+  seo_tail:
+    - "Этот {model} {status} в хорошем состоянии доступен с гарантией. Выгодный вариант для тех, кто ищет честное устройство без переплаты."
+    - "Если нужен {model} {status} по понятной цене — это как раз он. Рабочее состояние, проверенный комплект и гарантия."
+
+renderer:
+  html_template:
+    - "<h2>{{title}}</h2>"
+    - "<p>{{opening}}</p>"
+    - "<p>{{screen_sentence}} {{body_sentence}}</p>"
+    - "<p>{{repairs_sentence}} {{value_sentence}}</p>"
+    - "<ul>"
+    - "  {{battery_li_optional}}"
+    - "  {{condition_li_optional}}"
+    - "  {{kit_li_optional}}"
+    - "  {{warranty_li_optional}}"
+    - "  {{notes_li_optional}}"
+    - "</ul>"
+    - "{{seo_tail_p_optional}}"
+  build_rules:
+    - If battery_health exists:
+        qualifier := guards.battery_qualifiers[map_from_number(battery_health)]
+        battery_qualifier := " — " + qualifier
+        battery_uncertainty := "" if is_clear_about_battery_source else " " + uncertainty_flag
+        battery_li_optional := "<li>{{facts_labels.battery}}: {{battery_health}}%{{battery_qualifier}}{{battery_uncertainty}}</li>"
+      else:
+        battery_li_optional := ""
+    - condition_li_optional := condition_overall ? "<li>{{facts_labels.condition}}: {{condition_overall}}</li>" : ""
+    - kit_li_optional := accessories ? "<li>{{facts_labels.kit}}: {{accessories}}</li>" : ""
+    - warranty_li_optional := warranty ? "<li>{{facts_labels.warranty}}: {{warranty}}</li>" : ""
+    - notes_li_optional := notes ? "<li>{{facts_labels.notes}}: {{notes}}</li>" : ""
+    - seo_tail_p_optional := seo_tail ? "<p>{{seo_tail}}</p>" : ""
+    - Trim double spaces; ensure paragraphs ≤ style_and_rules.paragraph_max_lines and ≤ mobile_scan_rules.paragraph_max_chars.
+    - Ensure each <li> ≤ mobile_scan_rules.list_item_max_chars.
+    - No emojis. No <h1>. If brand == "Apple", enforce strict casing from style_and_rules.apple_naming_strict.
+    - Limit mentions of {{model}} in body to ≤ mobile_scan_rules.max_model_mentions.
+
+consistency_checks:
+  - "Если brand/model не извлечены — в заголовок добавлен uncertainty_flag."
+  - "Не употреблены запрещённые клише."
+  - "Нет выдуманных характеристик: используются только извлечённые из raw_text."
+  - "Apple-нейминг соблюдён, если brand=Apple."
+  - "Количество мемов ≤ max_memes_per_text."
+  - "Сервисный тон только с ironic_dry_overlay или пересэмплирован."
+  - "Название модели в тексте ≤ mobile_scan_rules.max_model_mentions."
+  - "Ограничения mobile_scan_rules выполнены."</pre>
     <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
   </div>
 
