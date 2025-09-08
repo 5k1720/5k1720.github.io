@@ -6,16 +6,6 @@
 <title>⚡ΨУЛЬТРА-НЕЙРО-ШИЗО-ФЛЕКС⚡</title>
 <link rel="stylesheet" href="prompts-style.css">
 <link rel="stylesheet" href="style.css">
-<style>
-  body {
-    /* Возвращаем анимированный фон, который перебил другой файл стилей */
-    background: linear-gradient(270deg, #ff00cc, #3333ff, #00ffcc, #ff6600, #ff0000, #00ff99) !important;
-    background-size: 1200% 1200% !important;
-    animation: bg-shift 8s ease infinite !important;
-    /* Убираем отступ сверху от меню, он тут не нужен */
-    padding-top: 0 !important;
-  }
-</style>
 </head>
 <body>
 <header class="site-header">
@@ -459,4 +449,105 @@ none:
 - "История чистая: без ремонтов."
 - "Без вмешательств сервиса, работает стабильно."
 some:
-- "Были работы
+- "Были работы: {repairs_history}. Всё проверено на работоспособность."
+- "Проводился ремонт: {repairs_history}. Текущая работа — ок."
+value:
+brand:
+- "Честная альтернатива новому: платите за устройство, а не за плёнку на коробке."
+- "Хороший баланс цены и состояния. Для повседневных задач — с запасом."
+- "Проверен сервисом, собран без сюрпризов. Покупка с понятными ожиданиями."
+- "Выгодно и без лишнего пафоса: рабочий девайс по разумной цене."
+neutral:
+- "Рациональная покупка: рабочее устройство по понятной цене."
+- "Выбор для тех, кто ценит функциональность без переплаты."
+service:
+- "Соотношение цена/состояние — адекватное."
+memes_optional:
+- "родимый"
+- "добряк"
+- "аккуратный трудяга"
+- "без истерик и сюрпризов"
+- "готов к делам"
+- "без переплаты за новизну"
+facts_labels:
+battery: "Аккумулятор"
+condition: "Состояние"
+kit: "Комплект"
+warranty: "Гарантия"
+notes: "Важно"
+ironic_dry_overlay:
+prefaces:
+- "Коротко, чтобы не тратить ваше время."
+- "Факты без приукрас."
+- "Сухая версия для занятых."
+postscripts:
+- "Если нужен роман, у нас есть блог. А здесь — факты."
+- "Остальное видно по месту. Работает, и этого достаточно."
+- "Проверили. Спим спокойно."
+seo_tail:
+- "Этот {model} {status} в хорошем состоянии доступен с гарантией. Выгодный вариант для тех, кто ищет честное устройство без переплаты."
+- "Если нужен {model} {status} по понятной цене — это как раз он. Рабочее состояние, проверенный комплект и гарантия."
+renderer:
+html_template:
+- "&lt;h2&gt;{{title}}&lt;/h2&gt;"
+- "&lt;p&gt;{{opening}}&lt;/p&gt;"
+- "&lt;p&gt;{{screen_sentence}} {{body_sentence}}&lt;/p&gt;"
+- "&lt;p&gt;{{repairs_sentence}} {{value_sentence}}&lt;/p&gt;"
+- "&lt;ul&gt;"
+- "  {{battery_li_optional}}"
+- "  {{condition_li_optional}}"
+- "  {{kit_li_optional}}"
+- "  {{warranty_li_optional}}"
+- "  {{notes_li_optional}}"
+- "&lt;/ul&gt;"
+- "{{seo_tail_p_optional}}"
+build_rules:
+- If battery_health exists:
+qualifier := guards.battery_qualifiers[map_from_number(battery_health)]
+battery_qualifier := " — " + qualifier
+battery_uncertainty := "" if is_clear_about_battery_source else " " + uncertainty_flag
+battery_li_optional := "&lt;li&gt;{{facts_labels.battery}}: {{battery_health}}%{{battery_qualifier}}{{battery_uncertainty}}&lt;/li&gt;"
+else:
+battery_li_optional := ""
+- condition_li_optional := condition_overall ? "&lt;li&gt;{{facts_labels.condition}}: {{condition_overall}}&lt;/li&gt;" : ""
+- kit_li_optional := accessories ? "&lt;li&gt;{{facts_labels.kit}}: {{accessories}}&lt;/li&gt;" : ""
+- warranty_li_optional := warranty ? "&lt;li&gt;{{facts_labels.warranty}}: {{warranty}}&lt;/li&gt;" : ""
+- notes_li_optional := notes ? "&lt;li&gt;{{facts_labels.notes}}: {{notes}}&lt;/li&gt;" : ""
+- seo_tail_p_optional := seo_tail ? "&lt;p&gt;{{seo_tail}}&lt;/p&gt;" : ""
+- Trim double spaces; ensure paragraphs ≤ style_and_rules.paragraph_max_lines and ≤ mobile_scan_rules.paragraph_max_chars.
+- Ensure each &lt;li&gt; ≤ mobile_scan_rules.list_item_max_chars.
+- No emojis. No &lt;h1&gt;. If brand == "Apple", enforce strict casing from style_and_rules.apple_naming_strict.
+- Limit mentions of {{model}} in body to ≤ mobile_scan_rules.max_model_mentions.
+consistency_checks:
+- "Если brand/model не извлечены — в заголовок добавлен uncertainty_flag."
+- "Не употреблены запрещённые клише."
+- "Нет выдуманных характеристик: используются только извлечённые из raw_text."
+- "Apple-нейминг соблюдён, если brand=Apple."
+- "Количество мемов ≤ max_memes_per_text."
+- "Сервисный тон только с ironic_dry_overlay или пересэмплирован."
+- "Название модели в тексте ≤ mobile_scan_rules.max_model_mentions."
+- "Ограничения mobile_scan_rules выполнены."
+</pre>
+<button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
+</div>
+<div class="sigil sigil-left" aria-hidden="true">⛧</div>
+<div class="sigil sigil-center" aria-hidden="true">☽☯☾</div>
+<div class="sigil sigil-right" aria-hidden="true">☥</div>
+<div class="blobs">
+<span class="blob b1"></span>
+<span class="blob b2"></span>
+<span class="blob b3"></span>
+</div>
+<svg width="0" height="0" style="position:absolute">
+<filter id="sigil-warp">
+<feTurbulence type="fractalNoise" baseFrequency="0.015 0.02" numOctaves="2" seed="7" result="noise">
+<animate attributeName="baseFrequency" values="0.015 0.02; 0.020 0.028; 0.015 0.02" dur="8s" repeatCount="indefinite"/>
+</feTurbulence>
+<feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G">
+<animate attributeName="scale" values="6;10;6" dur="8s" repeatCount="indefinite"/>
+</feDisplacementMap>
+</filter>
+</svg>
+<script src="script.js"></script>
+</body>
+</html>

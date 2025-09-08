@@ -3,9 +3,11 @@
 body{
 margin:0;
 font-family:'Inter',sans-serif;
+padding-top:60px
+}
+body.page-main{
 background-color:#0a0a0a;
 color:#e0e0e0;
-padding-top:60px
 }
 .site-header{
 position:sticky;
