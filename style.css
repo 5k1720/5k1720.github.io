@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
-/* :root определяет переменные для светлой темы по умолчанию */
 :root {
   --page-bg: #ffffff;
   --text-color: #000000;
@@ -13,7 +12,6 @@
   --button-hover-bg: #e5e5e5;
 }
 
-/* Этот блок переопределяет переменные, если у юзера включена темная тема */
 @media (prefers-color-scheme: dark) {
   :root {
     --page-bg: #0a0a0a;
@@ -30,18 +28,18 @@
 
 *{box-sizing:border-box}
 
-/* Общие стили для body, которые применяются везде */
+/* Общие стили для body - ТОЛЬКО самое необходимое */
 body{
   margin:0;
   font-family:'Inter',sans-serif;
-  padding-top:60px;
 }
 
 /* Стили, которые применяются ТОЛЬКО к главной странице */
 body.page-main {
+  padding-top:60px;
   background-color: var(--page-bg);
   color: var(--text-color);
-  transition: background-color 0.3s, color 0.3s; /* Плавный переход */
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .site-header{
@@ -65,7 +63,6 @@ body.page-main {
   font-weight:700;
   font-size:1.5rem;
   text-decoration:none;
-  /* Цвет лого в шапке будет зависеть от темы */
   color: var(--text-color);
 }
 

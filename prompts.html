@@ -6,6 +6,20 @@
 <title>⚡ΨУЛЬТРА-НЕЙРО-ШИЗО-ФЛЕКС⚡</title>
 <link rel="stylesheet" href="prompts-style.css">
 <link rel="stylesheet" href="style.css">
+<style>
+  body {
+    color: #fff !important;
+    padding-top: 0 !important;
+  }
+  .site-header {
+    /* На этой странице шапка будет всегда темной */
+    --header-bg: rgba(10, 10, 10, 0.8);
+    --header-border: #2a2a2a;
+    --nav-link: #a0a0a0;
+    --nav-link-hover: #ffffff;
+    --text-color: #e0e0e0;
+  }
+</style>
 </head>
 <body>
 <header class="site-header">
@@ -524,30 +538,3 @@ consistency_checks:
 - "Нет выдуманных характеристик: используются только извлечённые из raw_text."
 - "Apple-нейминг соблюдён, если brand=Apple."
 - "Количество мемов ≤ max_memes_per_text."
-- "Сервисный тон только с ironic_dry_overlay или пересэмплирован."
-- "Название модели в тексте ≤ mobile_scan_rules.max_model_mentions."
-- "Ограничения mobile_scan_rules выполнены."
-</pre>
-<button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
-</div>
-<div class="sigil sigil-left" aria-hidden="true">⛧</div>
-<div class="sigil sigil-center" aria-hidden="true">☽☯☾</div>
-<div class="sigil sigil-right" aria-hidden="true">☥</div>
-<div class="blobs">
-<span class="blob b1"></span>
-<span class="blob b2"></span>
-<span class="blob b3"></span>
-</div>
-<svg width="0" height="0" style="position:absolute">
-<filter id="sigil-warp">
-<feTurbulence type="fractalNoise" baseFrequency="0.015 0.02" numOctaves="2" seed="7" result="noise">
-<animate attributeName="baseFrequency" values="0.015 0.02; 0.020 0.028; 0.015 0.02" dur="8s" repeatCount="indefinite"/>
-</feTurbulence>
-<feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G">
-<animate attributeName="scale" values="6;10;6" dur="8s" repeatCount="indefinite"/>
-</feDisplacementMap>
-</filter>
-</svg>
-<script src="script.js"></script>
-</body>
-</html>
