@@ -30,11 +30,15 @@
 
 *{box-sizing:border-box}
 
+/* Общие стили для body, которые применяются везде */
 body{
   margin:0;
   font-family:'Inter',sans-serif;
   padding-top:60px;
-  /* Применяем переменные */
+}
+
+/* Стили, которые применяются ТОЛЬКО к главной странице */
+body.page-main {
   background-color: var(--page-bg);
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s; /* Плавный переход */
@@ -51,7 +55,6 @@ body{
   padding:0 2rem;
   height:60px;
   backdrop-filter:blur(10px);
-  /* Применяем переменные */
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--header-border);
   z-index:1000;
@@ -62,6 +65,7 @@ body{
   font-weight:700;
   font-size:1.5rem;
   text-decoration:none;
+  /* Цвет лого в шапке будет зависеть от темы */
   color: var(--text-color);
 }
 
@@ -69,7 +73,6 @@ nav a{
   text-decoration:none;
   margin-left:1.5rem;
   font-size:1rem;
-  /* Применяем переменные */
   color: var(--nav-link);
   transition:color 0.2s ease-in-out;
 }
@@ -104,7 +107,6 @@ nav a.active{
   font-size:1.2rem;
   border-radius:24px;
   cursor:pointer;
-  /* Применяем переменные */
   background-color: var(--button-bg);
   border: 1px solid var(--button-border);
   color: var(--text-color);
