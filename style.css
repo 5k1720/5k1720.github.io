@@ -80,15 +80,20 @@ nav a.active{
   font-weight:700;
 }
 
-/* Изменения здесь: отступ применяется к контенту, а не ко всей странице */
 .main-content{
   display:flex;
   justify-content:center;
   align-items:center;
   min-height:calc(100vh - 60px);
-  padding: 2rem;
-  margin-top: 60px; /* Добавили отступ сверху */
+  padding:2rem;
+  /* Убираем отступ отсюда, так как он не везде нужен */
 }
+
+/* Новый стиль для контента главной страницы */
+.main-content-padded {
+  padding-top: 60px;
+}
+
 
 .button-container{
   display:grid;
