@@ -20,21 +20,28 @@ export default async function handler(req, res) {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        // --- НОВЫЙ СПОСОБ ОБРАБОТКИ ФАЙЛА С ПОМОЩЬЮ FORMIDABLE ---
         const form = formidable({});
         const [fields, files] = await form.parse(req);
         
-        const audioFile = files.audio?.[0];
+        const uploadedFile = files.audio?.[0];
 
-        if (!audioFile) {
+        if (!uploadedFile) {
             res.status(400).json({ error: 'Аудиофайл не найден' });
             return;
         }
 
+        // --- ИСПРАВЛЕНИЕ ---
+        // Создаём из временного файла объект, понятный для OpenAI,
+        // и явно указываем оригинальное имя файла.
+        const audioFile = await OpenAI.toFile(
+            fs.createReadStream(uploadedFile.filepath),
+            uploadedFile.originalFilename
+        );
+
         // --- ЭТАП 1: Распознавание речи (Whisper) ---
         const transcription = await openai.audio.transcriptions.create({
             model: 'whisper-1',
-            file: fs.createReadStream(audioFile.filepath),
+            file: audioFile,
         });
         const userText = transcription.text;
 
@@ -62,7 +69,6 @@ export default async function handler(req, res) {
             input: assistantText,
         });
 
-        // Отправляем аудиофайл обратно на сайт
         res.setHeader('Content-Type', 'audio/mpeg');
         speech.body.pipe(res);
 
