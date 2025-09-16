@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Assistant</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="voice-assistant.css">
+</head>
+<body class="page-main">
+<header class="site-header">
+    <div class="logo">
+        <a href="index.html">[ ψ ]</a>
+    </div>
+    <nav>
+        <a href="index.html">главная</a>
+        <a href="prompts.html" class="liquid">промты</a>
+        <a href="voice-assistant.html" class="active">AI-Консультант</a>
+    </nav>
+</header>
+<main class="main-content main-content-padded">
+    <div class="voice-chat-container">
+        <div id="status" class="status-indicator">Готов к работе</div>
+        <div class="visualizer-container">
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+        </div>
+        <button id="connectButton" class="connect-button">
+            <span class="icon-mic"></span>
+            <span class="button-text">Начать консультацию</span>
+        </button>
+        <div id="transcript" class="transcript-display"></div>
+    </div>
+</main>
+<script src="voice-assistant.js"></script>
+</body>
+</html>
