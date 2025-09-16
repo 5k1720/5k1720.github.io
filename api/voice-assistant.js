@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         return;
     }
     try {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, });
+        //const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, });
         const form = formidable({});
         const [fields, files] = await form.parse(req);
         const uploadedFile = files.audio?.[0];
