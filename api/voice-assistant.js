@@ -30,9 +30,6 @@ export default async function handler(req, res) {
             return;
         }
 
-        // --- ИСПРАВЛЕНИЕ ---
-        // Создаём из временного файла объект, понятный для OpenAI,
-        // и явно указываем оригинальное имя файла.
         const audioFile = await OpenAI.toFile(
             fs.createReadStream(uploadedFile.filepath),
             uploadedFile.originalFilename
@@ -45,9 +42,9 @@ export default async function handler(req, res) {
         });
         const userText = transcription.text;
 
-        // --- ЭТАП 2: Получение ответа от модели (GPT-4o) ---
+        // --- ЭТАП 2: Получение ответа от модели (GPT-3.5 TURBO) ---
         const chatCompletion = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-3.5-turbo', // <--- ВОТ ИЗМЕНЕНИЕ
             messages: [
                 {
                     role: 'system',
@@ -62,9 +59,9 @@ export default async function handler(req, res) {
         });
         const assistantText = chatCompletion.choices[0].message.content;
 
-        // --- ЭТАП 3: Синтез голоса (TTS) ---
+        // --- ЭТАП 3: Синтез голоса (TTS-1) ---
         const speech = await openai.audio.speech.create({
-            model: 'tts-1-hd',
+            model: 'tts-1', // <--- И ВОТ ИЗМЕНЕНИЕ
             voice: 'nova',
             input: assistantText,
         });
