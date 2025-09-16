@@ -1,72 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const connectButton = document.getElementById('connectButton');
     const statusEl = document.getElementById('status');
-    const transcriptEl = document.getElementById('transcript');
+    // ... (весь код до функции processAudio остаётся таким же, как в прошлый раз)
     
+    // Копируем весь код из предыдущего ответа, меняем ТОЛЬКО функцию processAudio
+    
+    // Старый код... (startRecording, stopRecording, event listeners)
+    const transcriptEl = document.getElementById('transcript');
     const YOUR_BACKEND_URL = '/api/voice-assistant'; 
-
     let isListening = false;
     let mediaRecorder;
     let audioChunks = [];
-
-    const startRecording = async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            statusEl.textContent = 'Микрофон не поддерживается.';
-            return;
-        }
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                if (audioBlob.size > 1000) {
-                    processAudio(audioBlob);
-                } else {
-                    statusEl.textContent = 'Готов к работе';
-                }
-                stream.getTracks().forEach(track => track.stop());
-            };
-            
-            mediaRecorder.start();
-            isListening = true;
-            statusEl.textContent = 'Слушаю... Говорите.';
-            connectButton.classList.add('active');
-            connectButton.querySelector('.button-text').textContent = 'Остановить запись';
-            transcriptEl.textContent = '';
-        } catch (error) {
-            console.error("Ошибка доступа к микрофону:", error);
-            statusEl.textContent = 'Ошибка микрофона.';
-            isListening = false;
-        }
-    };
-
-    const stopRecording = () => {
-        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
-        
-        mediaRecorder.stop();
-        isListening = false;
-        statusEl.textContent = 'Обработка...';
-        connectButton.classList.remove('active');
-        connectButton.querySelector('.button-text').textContent = 'Начать консультацию';
-    };
-    
-    // --- ЛОГИКА ПО КЛИКУ ---
-    connectButton.addEventListener('click', () => {
-        if (isListening) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
-    });
+    const startRecording = async () => { /* ...код из прошлого ответа... */ };
+    const stopRecording = () => { /* ...код из прошлого ответа... */ };
+    connectButton.addEventListener('click', () => { if (isListening) { stopRecording(); } else { startRecording(); } });
 
     async function processAudio(audioBlob) {
-        statusEl.textContent = 'Отправляю на сервер...';
+        statusEl.textContent = 'Отправляю на сервер (ТЕСТ)...';
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.webm');
 
@@ -76,30 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
 
-            // --- УЛУЧШЕННАЯ ОБРАБОТКА ОШИБОК ---
+            // В ТЕСТЕ МЫ ЖДЁМ НЕ АУДИО, А ТЕКСТ (JSON)
+            const result = await response.json();
+
             if (!response.ok) {
-                try {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Неизвестная ошибка сервера.');
-                } catch (jsonError) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || `Ошибка HTTP: ${response.status}`);
-                }
+                throw new Error(result.message || 'Неизвестная ошибка');
             }
             
-            statusEl.textContent = 'Воспроизвожу ответ...';
-            const audioResponseBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioResponseBlob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-
-            audio.onended = () => {
-                statusEl.textContent = 'Готов к работе';
-            };
+            // Показываем успешное сообщение от сервера
+            statusEl.textContent = `ОТВЕТ СЕРВЕРА: ${result.message}`;
 
         } catch (error) {
-            console.error('Ошибка при обращении к бэкенду:', error);
-            statusEl.textContent = `Ошибка: ${error.message}`;
+            console.error('Ошибка в тесте:', error);
+            statusEl.textContent = `ОШИБКА ТЕСТА: ${error.message}`;
+        } finally {
             connectButton.querySelector('.button-text').textContent = 'Попробовать снова';
         }
     }
