@@ -11,10 +11,10 @@ export default async function handler(req) {
         });
 
         // --- ИСПРАВЛЕНИЕ ---
-        // Используем специальный инструмент от OpenAI, чтобы правильно прочитать аудиопоток
-        const audioFile = await OpenAI.toFile(req, 'audio.webm');
+        // Возвращаемся к стандартному способу обработки форм
+        const formData = await req.formData();
+        const audioFile = formData.get('audio');
 
-        // Проверяем, что файл не пустой
         if (!audioFile || audioFile.size < 1000) {
             console.error("Бэкенд: Аудиофайл не получен или пуст.");
             return new Response(JSON.stringify({ error: 'Запись слишком короткая или пустая' }), { status: 400 });
