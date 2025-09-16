@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "formidable": "^3.5.1"
   }
 }

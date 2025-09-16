@@ -1,8 +1,18 @@
 import OpenAI from 'openai';
+import { formidable } from 'formidable';
+import fs from 'fs';
 
-export default async function handler(req) {
+// Важная настройка для Vercel, чтобы он правильно обрабатывал файлы
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
+
+export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Метод не разрешен' }), { status: 405 });
+        res.status(405).json({ error: 'Метод не разрешен' });
+        return;
     }
 
     try {
@@ -10,20 +20,21 @@ export default async function handler(req) {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        // --- ИСПРАВЛЕНИЕ ---
-        // Возвращаемся к стандартному способу обработки форм
-        const formData = await req.formData();
-        const audioFile = formData.get('audio');
+        // --- НОВЫЙ СПОСОБ ОБРАБОТКИ ФАЙЛА С ПОМОЩЬЮ FORMIDABLE ---
+        const form = formidable({});
+        const [fields, files] = await form.parse(req);
+        
+        const audioFile = files.audio?.[0];
 
-        if (!audioFile || audioFile.size < 1000) {
-            console.error("Бэкенд: Аудиофайл не получен или пуст.");
-            return new Response(JSON.stringify({ error: 'Запись слишком короткая или пустая' }), { status: 400 });
+        if (!audioFile) {
+            res.status(400).json({ error: 'Аудиофайл не найден' });
+            return;
         }
 
         // --- ЭТАП 1: Распознавание речи (Whisper) ---
         const transcription = await openai.audio.transcriptions.create({
             model: 'whisper-1',
-            file: audioFile,
+            file: fs.createReadStream(audioFile.filepath),
         });
         const userText = transcription.text;
 
@@ -51,12 +62,12 @@ export default async function handler(req) {
             input: assistantText,
         });
 
-        return new Response(speech.body, {
-            headers: { 'Content-Type': 'audio/mpeg' },
-        });
+        // Отправляем аудиофайл обратно на сайт
+        res.setHeader('Content-Type', 'audio/mpeg');
+        speech.body.pipe(res);
 
     } catch (error) {
         console.error('КРИТИЧЕСКАЯ ОШИБКА НА БЭКЕНДЕ:', error.message);
-        return new Response(JSON.stringify({ error: 'Произошла ошибка на сервере OpenAI' }), { status: 500 });
+        res.status(500).json({ error: 'Произошла ошибка на сервере OpenAI' });
     }
 }
