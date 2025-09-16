@@ -19,20 +19,29 @@
     </nav>
 </header>
 <main class="main-content main-content-padded">
-    <div class="voice-chat-container">
-        <div id="status" class="status-indicator">Готов к работе</div>
-        <div class="visualizer-container">
-            <div class="visualizer-bar"></div>
-            <div class="visualizer-bar"></div>
-            <div class="visualizer-bar"></div>
-            <div class="visualizer-bar"></div>
-            <div class="visualizer-bar"></div>
+    <div class="assistant-container" id="assistantContainer">
+        <div class="instruction-block">
+            <h2>Как это работает</h2>
+            <p>1. Нажмите и удерживайте кнопку записи.</p>
+            <p>2. Задайте свой вопрос чётко и громко.</p>
+            <p>3. Отпустите кнопку и дождитесь голосового ответа.</p>
         </div>
-        <button id="connectButton" class="connect-button">
-            <span class="icon-mic"></span>
-            <span class="button-text">Начать консультацию</span>
-        </button>
-        <div id="transcript" class="transcript-display"></div>
+
+        <div class="voice-chat-container">
+            <div id="status" class="status-indicator">Готов к работе</div>
+            <div class="visualizer-container">
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+            </div>
+            <button id="connectButton" class="connect-button">
+                <span class="icon-mic"></span>
+                <span class="button-text">Начать консультацию</span>
+            </button>
+            <div id="transcript" class="transcript-display"></div>
+        </div>
     </div>
 </main>
 <script src="voice-assistant.js"></script>
