@@ -1,11 +1,6 @@
 // Импортируем OpenAI SDK для удобной работы
 import OpenAI from 'openai';
 
-// Эта строка важна для Vercel, чтобы он правильно обрабатывал запросы
-export const config = {
-    runtime: 'edge',
-};
-
 // Главная функция, которая будет обрабатывать все входящие запросы
 export default async function handler(req) {
     // Проверяем, что запрос пришел методом POST (т.е. с отправкой данных)
