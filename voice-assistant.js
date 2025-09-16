@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusEl = document.getElementById('status');
     const transcriptEl = document.getElementById('transcript');
     
-    // АДРЕС ТВОЕГО БЕЗОПАСНОГО СЕРВЕРА НА VERCEL
     const YOUR_BACKEND_URL = '/api/voice-assistant'; 
 
     let isListening = false;
@@ -17,41 +16,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
             mediaRecorder = new MediaRecorder(stream);
+            
             mediaRecorder.ondataavailable = event => {
                 audioChunks.push(event.data);
             };
-            mediaRecorder.onstop = async () => {
+
+            mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                audioChunks = [];
-                processAudio(audioBlob);
+                if (audioBlob.size > 1000) {
+                    processAudio(audioBlob);
+                } else {
+                    statusEl.textContent = 'Готов к работе';
+                }
+                stream.getTracks().forEach(track => track.stop());
             };
+            
             mediaRecorder.start();
             isListening = true;
-            statusEl.textContent = 'Слушаю...';
+            statusEl.textContent = 'Слушаю... Говорите.';
             connectButton.classList.add('active');
-            connectButton.querySelector('.button-text').textContent = 'Отправить';
+            connectButton.querySelector('.button-text').textContent = 'Остановить запись';
+            transcriptEl.textContent = '';
         } catch (error) {
-            console.error('Ошибка доступа к микрофону:', error);
+            console.error("Ошибка доступа к микрофону:", error);
             statusEl.textContent = 'Ошибка микрофона.';
+            isListening = false;
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-        }
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+        
+        mediaRecorder.stop();
         isListening = false;
         statusEl.textContent = 'Обработка...';
         connectButton.classList.remove('active');
         connectButton.querySelector('.button-text').textContent = 'Начать консультацию';
     };
-
+    
+    // --- ЛОГИКА ПО КЛИКУ ---
     connectButton.addEventListener('click', () => {
         if (isListening) {
             stopRecording();
         } else {
-            transcriptEl.textContent = '';
             startRecording();
         }
     });
@@ -67,9 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
 
+            // --- УЛУЧШЕННАЯ ОБРАБОТКА ОШИБОК ---
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Ошибка на сервере.');
+                try {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Неизвестная ошибка сервера.');
+                } catch (jsonError) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Ошибка HTTP: ${response.status}`);
+                }
             }
             
             statusEl.textContent = 'Воспроизвожу ответ...';
@@ -80,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             audio.onended = () => {
                 statusEl.textContent = 'Готов к работе';
-                connectButton.querySelector('.button-text').textContent = 'Начать консультацию';
             };
 
         } catch (error) {
