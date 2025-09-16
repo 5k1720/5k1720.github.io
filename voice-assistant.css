@@ -56,6 +56,9 @@
     gap: 1rem;
     font-family: 'Inter', sans-serif;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    -webkit-user-select: none; /* Safari, Chrome */
+    -ms-user-select: none;     /* IE 10+ */
+    user-select: none;         /* Standard syntax */
 }
 .connect-button:hover { background-color: var(--button-hover-bg); border-color: #aaa; }
 .connect-button.active { background-color: #ff0055; color: white; border-color: #ff0055; }
