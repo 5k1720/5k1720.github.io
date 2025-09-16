@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+
     async function processAudio(audioBlob) {
         statusEl.textContent = 'Отправляю на сервер...';
         const formData = new FormData();
