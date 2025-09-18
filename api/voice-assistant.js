@@ -3,20 +3,12 @@ import { WebSocketServer } from 'ws';
 import OpenAI from 'openai';
 import express from 'express';
 import cors from 'cors';
-import OpenAI from 'openai';
-import { createRequire } from 'module'; // <-- ДОБАВЬ ЭТУ СТРОКУ
-import { WebSocketServer } from 'ws';    // Эта строка у тебя уже есть
-import express from 'express';          // Эта строка у тебя уже есть
-import cors from 'cors';                // Эта строка у тебя уже есть
 
-// VVV ДОБАВЬ ЭТИ ТРИ СТРОКИ НИЖЕ VVV
+// Наша строчка-шпион для проверки версии
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const openaiVersion = require('openai/package.json').version;
 console.log(`--- Установленная версия OpenAI на сервере: ${openaiVersion} ---`);
-
-// --- НАСТРОЙКИ ---
-const port = process.env.PORT || 10000;
-// ... остальной код без изменений
 
 // --- НАСТРОЙКИ ---
 const port = process.env.PORT || 10000;
@@ -36,7 +28,7 @@ wss.on('connection', async (ws) => {
     try {
         const realtime = openai.realtime.speech.create({
             model: "gpt-realtime",
-            language: "ru-RU", 
+            language: "ru-RU",
         });
 
         realtime.on('audio', (audioChunk) => {
@@ -51,7 +43,7 @@ wss.on('connection', async (ws) => {
                 ws.close(1011, 'Ошибка OpenAI');
             }
         });
-        
+
         realtime.on('close', () => {
             console.log('Сессия с OpenAI закрыта.');
             if (ws.readyState === ws.OPEN) {
