@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const transcriptEl = document.getElementById('transcript');
     const assistantContainer = document.getElementById('assistantContainer');
 
-    const YOUR_BACKEND_URL = '/api/voice-assistant'; 
+    const YOUR_BACKEND_URL = 'https://voice-assistant-backend-bym9.onrender.com/api/voice-assistant'; 
 
     let mediaRecorder;
     let audioChunks = [];
