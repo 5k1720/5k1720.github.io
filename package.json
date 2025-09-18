@@ -1,16 +1,16 @@
 {
   "name": "voice-assistant-backend",
   "version": "1.0.0",
-  "description": "Voice assistant backend with OpenAI Realtime API",
-  "main": "api/voice-assistant.js",
+  "private": true,
   "type": "module",
+  "engines": { "node": ">=18" },
   "scripts": {
-    "start": "node api/voice-assistant.js"
+    "start": "node api/voice-assistant.js",
+    "dev": "node api/voice-assistant.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.19.2",
-    "openai": "^4.52.7",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "cors": "^2.8.5"
   }
 }
