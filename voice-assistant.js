@@ -1,98 +1,96 @@
 document.addEventListener('DOMContentLoaded', () => {
     const connectButton = document.getElementById('connectButton');
     const statusEl = document.getElementById('status');
-    const transcriptEl = document.getElementById('transcript');
-    const assistantContainer = document.getElementById('assistantContainer');
+    const buttonText = connectButton.querySelector('.button-text');
 
-    const YOUR_BACKEND_URL = 'https://voice-assistant-backend-bym9.onrender.com/api/voice-assistant'; 
+    const YOUR_BACKEND_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
-    let isListening = false;
     let mediaRecorder;
-    let audioChunks = [];
+    let socket;
+    let audioContext;
+    let audioQueue = [];
+    let isPlaying = false;
+    let isRecording = false;
 
-    const startRecording = async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            statusEl.textContent = 'Микрофон не поддерживается.';
-            return;
-        }
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+    const playAudioQueue = () => {
+        if (isPlaying || audioQueue.length === 0) return;
+        isPlaying = true;
 
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                if (audioBlob.size > 1000) {
-                    processAudio(audioBlob);
-                } else {
-                    statusEl.textContent = 'Готов к работе';
-                }
-                stream.getTracks().forEach(track => track.stop());
-            };
-            
-            mediaRecorder.start();
-            isListening = true;
-            statusEl.textContent = 'Слушаю... Говорите.';
-            connectButton.classList.add('active');
-            assistantContainer.classList.add('is-recording');
-            connectButton.querySelector('.button-text').textContent = 'Остановить запись';
-            transcriptEl.textContent = '';
-        } catch (error) {
-            console.error("Ошибка доступа к микрофону:", error);
-            statusEl.textContent = 'Ошибка микрофона.';
-            isListening = false;
-        }
+        const audioChunk = audioQueue.shift();
+        const source = audioContext.createBufferSource();
+        source.buffer = audioChunk;
+        source.connect(audioContext.destination);
+        source.onended = () => {
+            isPlaying = false;
+            playAudioQueue();
+        };
+        source.start();
     };
 
-    const stopRecording = () => {
-        if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+    const connect = async () => {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        socket = new WebSocket(YOUR_BACKEND_URL);
+        socket.binaryType = 'arraybuffer';
+
+        socket.onopen = () => {
+            console.log('WebSocket-соединение установлено.');
+            statusEl.textContent = 'Говорите...';
+            buttonText.textContent = 'Завершить разговор';
+            isRecording = true;
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+                            socket.send(event.data);
+                        }
+                    });
+                    mediaRecorder.start(300);
+                });
+        };
+
+        socket.onmessage = async (event) => {
+            const audioBuffer = await audioContext.decodeAudioData(event.data);
+            audioQueue.push(audioBuffer);
+            playAudioQueue();
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket-соединение закрыто.');
+            cleanup();
+        };
         
-        mediaRecorder.stop();
-        isListening = false;
-        statusEl.textContent = 'Обработка...';
-        connectButton.classList.remove('active');
-        assistantContainer.classList.remove('is-recording');
-        connectButton.querySelector('.button-text').textContent = 'Начать консультацию';
+        socket.onerror = (error) => {
+            console.error('WebSocket-ошибка:', error);
+            statusEl.textContent = 'Ошибка соединения';
+            cleanup();
+        };
     };
-    
-    // --- Логика "клик-старт / клик-стоп" ---
+
+    const disconnect = () => {
+        if (socket) socket.close();
+    };
+
+    const cleanup = () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        mediaRecorder = null;
+        socket = null;
+        isRecording = false;
+        audioQueue = [];
+        isPlaying = false;
+        statusEl.textContent = 'Готов к работе';
+        buttonText.textContent = 'Начать консультацию';
+    };
+
     connectButton.addEventListener('click', () => {
-        if (isListening) {
-            stopRecording();
+        if (isRecording) {
+            disconnect();
         } else {
-            startRecording();
+            connect();
         }
     });
-
-    async function processAudio(audioBlob) {
-        statusEl.textContent = 'Отправляю на сервер...';
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
-        try {
-            const response = await fetch(YOUR_BACKEND_URL, { method: 'POST', body: formData });
-            if (!response.ok) {
-                try {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Неизвестная ошибка сервера.');
-                } catch (jsonError) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || `Ошибка HTTP: ${response.status}`);
-                }
-            }
-            statusEl.textContent = 'Воспроизвожу ответ...';
-            const audioResponseBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioResponseBlob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-            audio.onended = () => { statusEl.textContent = 'Готов к работе'; };
-        } catch (error) {
-            console.error('Ошибка при обращении к бэкенду:', error);
-            statusEl.textContent = `Ошибка: ${error.message}`;
-            connectButton.querySelector('.button-text').textContent = 'Попробовать снова';
-        }
-    }
 });

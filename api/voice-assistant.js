@@ -1,63 +1,65 @@
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
 import OpenAI from 'openai';
-import { formidable } from 'formidable';
-import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 
-const app = express();
+// --- НАСТРОЙКИ ---
 const port = process.env.PORT || 10000;
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// --- СЕРВЕР ---
+const app = express();
 app.use(cors());
+app.get("/", (req, res) => { res.send("Бэкенд для OpenAI Realtime API жив!"); });
 
-app.post('/api/voice-assistant', async (req, res) => {
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', async (ws) => {
+    console.log('Клиент подключился по WebSocket');
+
     try {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const realtime = openai.realtime.speech.create({
+            model: "gpt-realtime",
+            language: "ru-RU", 
+        });
 
-        const form = formidable({});
-        const [fields, files] = await form.parse(req);
+        realtime.on('audio', (audioChunk) => {
+            if (ws.readyState === ws.OPEN) {
+                ws.send(audioChunk);
+            }
+        });
+
+        realtime.on('error', (error) => {
+            console.error('Ошибка от OpenAI Realtime API:', error);
+            if (ws.readyState === ws.OPEN) {
+                ws.close(1011, 'Ошибка OpenAI');
+            }
+        });
         
-        const uploadedFile = files.audio?.[0];
-
-        if (!uploadedFile) {
-            return res.status(400).json({ error: 'Аудиофайл не найден' });
-        }
-
-        const audioFile = await OpenAI.toFile(
-            fs.createReadStream(uploadedFile.filepath),
-            uploadedFile.originalFilename
-        );
-
-        const transcription = await openai.audio.transcriptions.create({
-            model: 'whisper-1',
-            file: audioFile,
-        });
-        const userText = transcription.text;
-
-        const chatCompletion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo', // Экономная модель
-            messages: [
-                { role: 'system', content: "Ты — эксперт-консультант сервиса Save'n'Sale по ремонту техники Apple. Отвечай кратко и дружелюбно. Всегда предлагай бесплатную диагностику." },
-                { role: 'user', content: userText || "Клиент молчал. Скажи 'Алло?'." }
-            ],
-            max_tokens: 150,
-        });
-        const assistantText = chatCompletion.choices[0].message.content;
-
-        const speech = await openai.audio.speech.create({
-            model: 'tts-1', // Экономная модель
-            voice: 'nova',
-            input: assistantText,
+        realtime.on('close', () => {
+            console.log('Сессия с OpenAI закрыта.');
+            if (ws.readyState === ws.OPEN) {
+                ws.close();
+            }
         });
 
-        res.setHeader('Content-Type', 'audio/mpeg');
-        speech.body.pipe(res);
+        ws.on('message', (message) => {
+            realtime.stream(message);
+        });
+
+        ws.on('close', () => {
+            console.log('Клиент отключился.');
+            realtime.close();
+        });
 
     } catch (error) {
-        console.error('КРИТИЧЕСКАЯ ОШИБКА НА БЭКЕНДЕ:', error.message);
-        res.status(500).json({ error: 'Произошла ошибка на сервере OpenAI' });
+        console.error('Не удалось создать сессию OpenAI Realtime:', error);
+        ws.close(1011, 'Не удалось инициализировать сессию');
     }
 });
 
-app.listen(port, () => {
-    console.log(`Сервер запущен на порту ${port}`);
+server.listen(port, () => {
+    console.log(`Сервер Realtime v1.0 запущен на порту ${port}`);
 });
