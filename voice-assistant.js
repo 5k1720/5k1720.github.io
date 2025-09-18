@@ -1,17 +1,14 @@
-// voice-assistant.js — Realtime WS клиент (audio-only)
-// BUILD=a1
+// voice-assistant.js — audio-only, поддержка response.audio_delta | response.audio.delta | response.output_audio.delta
+// BUILD=a2
 document.addEventListener('DOMContentLoaded', () => {
   const connectButton = document.getElementById('connectButton');
   const statusEl = document.getElementById('status');
   const buttonText = connectButton.querySelector('.button-text');
-
   const WS_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
   let socket;
   let audioCtx;
-  let micStream;
-  let sourceNode;
-  let procNode;
+  let micStream, sourceNode, procNode;
   let isRecording = false;
 
   let playQueue = [];
@@ -19,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
 
+  // helpers
   function floatTo16BitPCM(float32Array) {
     const out = new Int16Array(float32Array.length);
     for (let i = 0; i < float32Array.length; i++) {
@@ -33,14 +31,29 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin);
   }
+  function b64ToArrayBuffer(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function ensureAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') {
+      try { await audioCtx.resume(); } catch {}
+    }
+    return audioCtx;
+  }
 
   async function playLoop() {
     if (playing) return;
     playing = true;
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    await ensureAudioCtx();
     while (playQueue.length > 0) {
-      const chunk = playQueue.shift(); // ожидаем WAV-дельты
+      const chunk = playQueue.shift(); // ожидаем WAV/декодируемый формат
       try {
+        // decodeAudioData ожидает копию ArrayBuffer
         const buf = await audioCtx.decodeAudioData(chunk.slice(0));
         const src = audioCtx.createBufferSource();
         src.buffer = buf;
@@ -60,10 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startMic() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+    await ensureAudioCtx();
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     sourceNode = audioCtx.createMediaStreamSource(micStream);
-
+    // ScriptProcessorNode — да, устарел, но прост и везде работает
     const bufSize = 4096;
     procNode = audioCtx.createScriptProcessor(bufSize, 1, 1);
     sourceNode.connect(procNode);
@@ -74,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const ch0 = e.inputBuffer.getChannelData(0);
       const pcm = floatTo16BitPCM(ch0);
       const b64 = ab2b64(pcm);
-      // Отправляем входные PCM-чанки
       send({ type: 'input_audio_buffer.append', audio: b64 });
     };
   }
@@ -97,8 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setStatus('Говорите…');
       buttonText.textContent = 'Завершить разговор';
 
-      // Настройка сессии: голос + только аудио-вывод + системная роль (консультант по ремонту)
-      // Поля voice/output_audio_format/instructions подтверждать не могу на 100% (НЕДОСТОВЕРНО, зависит от текущего релиза модели).
+      // Сессия: только аудио, голос + системка «консультант по ремонту»
+      // Точные названия полей в твоём аккаунте я подтвердить не могу на 100% — НЕДОСТОВЕРНО.
       send({
         type: 'session.update',
         session: {
@@ -107,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
           instructions:
             'Ты — консультант сервисного центра по ремонту техники. ' +
             'Фокус: iPhone, MacBook, iMac, Apple Watch, Mac mini. ' +
-            'Отвечай по-русски, коротко и предметно: первичная диагностика, вероятные причины, ' +
-            'что пользователь может проверить сам, и что лучше доверить мастеру. ' +
-            'Не обещай цены/сроки без диагностики. Предупреждай о рисках самостоятельного ремонта.',
+            'Отвечай по-русски, кратко и по делу: первичная диагностика, вероятные причины, ' +
+            'что клиент может проверить сам, и что лучше доверить мастеру. ' +
+            'Не обещай цены/сроки без диагностики. Предупреждай о рисках.',
           temperature: 0.4
         }
       });
@@ -122,19 +134,26 @@ document.addEventListener('DOMContentLoaded', () => {
         let msg;
         try { msg = JSON.parse(ev.data); } catch { return; }
 
-        // Нужное событие с аудио-дельтами в base64 (ожидаем WAV)
-        if (msg.type === 'response.output_audio.delta' && msg.delta) {
-          const bytes = Uint8Array.from(atob(msg.delta), c => c.charCodeAt(0));
-          playQueue.push(bytes.buffer);
+        // === АУДИО-ДЕЛЬТЫ ===
+        // встречаются варианты имён события:
+        // - response.audio_delta
+        // - response.audio.delta
+        // - response.output_audio.delta
+        if (
+          (msg.type === 'response.audio_delta' || msg.type === 'response.audio.delta' || msg.type === 'response.output_audio.delta') &&
+          msg.delta
+        ) {
+          const buf = b64ToArrayBuffer(msg.delta);
+          playQueue.push(buf);
           return playLoop();
         }
 
-        // Остальные события просто логируем (для отладки протокола)
+        // Остальные события просто логируем (на будущее)
         if (msg.type) console.log('WS event', msg.type);
         return;
       }
 
-      // Если вдруг придёт бинарь — тоже пробуем проигрывать
+      // На всякий — если пришёл чистый бинарь
       const buf = await ev.data.arrayBuffer?.() ?? ev.data;
       playQueue.push(buf);
       playLoop();
@@ -157,15 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!socket) return;
     if (isRecording) {
       isRecording = false;
-      // Закрываем ввод и просим СОЗДАТЬ ОТВЕТ ТОЛЬКО В АУДИО
+      // фиксим вход и просим СФОРМИРОВАТЬ ТОЛЬКО АУДИО-ОТВЕТ
       send({ type: 'input_audio_buffer.commit' });
       send({
         type: 'response.create',
         response: {
-          modalities: ['audio'], // только голос
+          modalities: ['audio'],
           instructions:
-            'Ты — консультант сервисного центра по ремонту техники (приоритет — устройства Apple). ' +
-            'Отвечай кратко, чётко, дружелюбно и безопасно.',
+            'Ты — консультант сервисного центра по ремонту (Apple приоритет). ' +
+            'Отвечай кратко, дружелюбно, безопасно.'
         }
       });
       setTimeout(() => socket && socket.close(), 1200);
@@ -174,7 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  connectButton.addEventListener('click', () => {
+  // Разрешаем аудио по юзер-жесту сразу
+  connectButton.addEventListener('click', async () => {
+    await ensureAudioCtx();
     if (isRecording) disconnect();
     else connect();
   });
