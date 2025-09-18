@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusEl = document.getElementById('status');
     const buttonText = connectButton.querySelector('.button-text');
 
-    // --- Убедись, что этот URL правильный! ---
     const YOUR_BACKEND_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
     let mediaRecorder;
@@ -12,8 +11,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioQueue = [];
     let isPlaying = false;
     let isRecording = false;
+    
+    // --- НАЧАЛО: ЛОГИКА ТАЙМЕРА БЕЗДЕЙСТВИЯ ---
+    let inactivityTimer;
 
-    // Функция для воспроизведения аудиопотока
+    const resetInactivityTimer = () => {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            console.log('Бездействие в течение 45 секунд. Отключаюсь.');
+            statusEl.textContent = 'Сессия завершена из-за бездействия';
+            disconnect();
+        }, 45000); // 45 секунд
+    };
+    // --- КОНЕЦ: ЛОГИКА ТАЙМЕРА БЕЗДЕЙСТВИЯ ---
+
     const playAudioQueue = () => {
         if (isPlaying || audioQueue.length === 0) return;
         isPlaying = true;
@@ -24,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         source.connect(audioContext.destination);
         source.onended = () => {
             isPlaying = false;
-            playAudioQueue(); // Проверяем, не появилось ли что-то новое в очереди
+            playAudioQueue();
         };
         source.start();
     };
@@ -42,22 +53,23 @@ document.addEventListener('DOMContentLoaded', () => {
             statusEl.textContent = 'Говорите...';
             buttonText.textContent = 'Завершить разговор';
             isRecording = true;
+            resetInactivityTimer(); // Запускаем таймер при подключении
 
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
                     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     mediaRecorder.addEventListener('dataavailable', event => {
-                        // VVV ВОТ ИЗМЕНЕНИЕ ЗДЕСЬ VVV
                         if (event.data.size > 0 && socket && socket.readyState === WebSocket.OPEN) {
                             socket.send(event.data);
+                            resetInactivityTimer(); // Сбрасываем таймер, когда говорим мы
                         }
                     });
-                    mediaRecorder.start(300); // Стримим аудио каждые 300 мс
+                    mediaRecorder.start(300);
                 });
         };
 
-        // Когда получаем аудио-ответ от сервера
         socket.onmessage = async (event) => {
+            resetInactivityTimer(); // Сбрасываем таймер, когда отвечает AI
             const audioBuffer = await audioContext.decodeAudioData(event.data);
             audioQueue.push(audioBuffer);
             playAudioQueue();
@@ -80,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const cleanup = () => {
+        clearTimeout(inactivityTimer); // Останавливаем таймер при любом завершении
         if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
         mediaRecorder = null;
         socket = null;

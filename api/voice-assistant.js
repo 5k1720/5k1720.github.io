@@ -3,6 +3,20 @@ import { WebSocketServer } from 'ws';
 import OpenAI from 'openai';
 import express from 'express';
 import cors from 'cors';
+import OpenAI from 'openai';
+import { createRequire } from 'module'; // <-- ДОБАВЬ ЭТУ СТРОКУ
+import { WebSocketServer } from 'ws';    // Эта строка у тебя уже есть
+import express from 'express';          // Эта строка у тебя уже есть
+import cors from 'cors';                // Эта строка у тебя уже есть
+
+// VVV ДОБАВЬ ЭТИ ТРИ СТРОКИ НИЖЕ VVV
+const require = createRequire(import.meta.url);
+const openaiVersion = require('openai/package.json').version;
+console.log(`--- Установленная версия OpenAI на сервере: ${openaiVersion} ---`);
+
+// --- НАСТРОЙКИ ---
+const port = process.env.PORT || 10000;
+// ... остальной код без изменений
 
 // --- НАСТРОЙКИ ---
 const port = process.env.PORT || 10000;
