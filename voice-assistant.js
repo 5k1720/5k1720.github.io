@@ -1,25 +1,23 @@
-// voice-assistant.js — Realtime WS client (PCM/base64)
-// BUILD=v1
+// voice-assistant.js — Realtime WS клиент (audio-only)
+// BUILD=a1
 document.addEventListener('DOMContentLoaded', () => {
   const connectButton = document.getElementById('connectButton');
   const statusEl = document.getElementById('status');
   const buttonText = connectButton.querySelector('.button-text');
-  const transcriptEl = document.getElementById('transcript');
 
-  const YOUR_BACKEND_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
+  const WS_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
   let socket;
   let audioCtx;
   let micStream;
   let sourceNode;
-  let procNode; // ScriptProcessorNode
+  let procNode;
   let isRecording = false;
 
-  // очередь аудио-буферов модели
   let playQueue = [];
   let playing = false;
 
-  function setStatus(t) { statusEl.textContent = t; }
+  const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
 
   function floatTo16BitPCM(float32Array) {
     const out = new Int16Array(float32Array.length);
@@ -29,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return out.buffer;
   }
-
   function ab2b64(ab) {
     const bytes = new Uint8Array(ab);
     let bin = '';
@@ -42,16 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
     playing = true;
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     while (playQueue.length > 0) {
-      const chunk = playQueue.shift(); // ArrayBuffer (pcm or wav chunk from model)
+      const chunk = playQueue.shift(); // ожидаем WAV-дельты
       try {
-        // Модель обычно шлёт линейный PCM в контейнере wav или raw — декодер справится.
-        const audioBuffer = await audioCtx.decodeAudioData(chunk.slice(0));
+        const buf = await audioCtx.decodeAudioData(chunk.slice(0));
         const src = audioCtx.createBufferSource();
-        src.buffer = audioBuffer;
+        src.buffer = buf;
         src.connect(audioCtx.destination);
-        await new Promise((res) => { src.onended = res; src.start(); });
+        await new Promise(res => { src.onended = res; src.start(); });
       } catch (e) {
-        console.warn('Decode/play error, skip chunk', e);
+        console.warn('Decode/play error, skip', e);
       }
     }
     playing = false;
@@ -63,11 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function startCapture() {
+  async function startMic() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     sourceNode = audioCtx.createMediaStreamSource(micStream);
-    // Используем ScriptProcessorNode для простоты (да, устаревший, но работает везде)
+
     const bufSize = 4096;
     procNode = audioCtx.createScriptProcessor(bufSize, 1, 1);
     sourceNode.connect(procNode);
@@ -75,20 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     procNode.onaudioprocess = (e) => {
       if (!isRecording) return;
-      const ch0 = e.inputBuffer.getChannelData(0); // Float32
+      const ch0 = e.inputBuffer.getChannelData(0);
       const pcm = floatTo16BitPCM(ch0);
       const b64 = ab2b64(pcm);
+      // Отправляем входные PCM-чанки
       send({ type: 'input_audio_buffer.append', audio: b64 });
     };
   }
 
-  function stopCaptureCommit() {
-    // завершили набор входного аудио и попросили ответ
-    send({ type: 'input_audio_buffer.commit' });
-    send({ type: 'response.create', response: { modalities: ['audio', 'text'] } });
-  }
-
-  function cleanupAudio() {
+  function stopMic() {
     try { procNode && procNode.disconnect(); } catch {}
     try { sourceNode && sourceNode.disconnect(); } catch {}
     try { micStream && micStream.getTracks().forEach(t => t.stop()); } catch {}
@@ -98,52 +89,55 @@ document.addEventListener('DOMContentLoaded', () => {
   function connect() {
     if (socket && socket.readyState === WebSocket.OPEN) return;
 
-    socket = new WebSocket(YOUR_BACKEND_URL);
-    // нам будут приходить ТЕКСТОВЫЕ JSON-события и, возможно, бинарь (wav-чанки)
+    socket = new WebSocket(WS_URL);
+    socket.binaryType = 'arraybuffer';
+
     socket.onopen = async () => {
-      console.log('WS opened');
       isRecording = true;
       setStatus('Говорите…');
       buttonText.textContent = 'Завершить разговор';
 
-      // (необязательно) сообщаем формат желаемого аудио — может игнорироваться движком (НЕДОСТОВЕРНО)
-      send({ type: 'session.update', session: { input_audio_format: 'pcm16', output_audio_format: 'wav' } });
+      // Настройка сессии: голос + только аудио-вывод + системная роль (консультант по ремонту)
+      // Поля voice/output_audio_format/instructions подтверждать не могу на 100% (НЕДОСТОВЕРНО, зависит от текущего релиза модели).
+      send({
+        type: 'session.update',
+        session: {
+          voice: 'verse',
+          output_audio_format: 'wav',
+          instructions:
+            'Ты — консультант сервисного центра по ремонту техники. ' +
+            'Фокус: iPhone, MacBook, iMac, Apple Watch, Mac mini. ' +
+            'Отвечай по-русски, коротко и предметно: первичная диагностика, вероятные причины, ' +
+            'что пользователь может проверить сам, и что лучше доверить мастеру. ' +
+            'Не обещай цены/сроки без диагностики. Предупреждай о рисках самостоятельного ремонта.',
+          temperature: 0.4
+        }
+      });
 
-      await startCapture();
+      await startMic();
     };
 
     socket.onmessage = async (ev) => {
-      // Может прийти строка (JSON-ивент) или бинарь (wav/pcm)
       if (typeof ev.data === 'string') {
         let msg;
         try { msg = JSON.parse(ev.data); } catch { return; }
 
-        // Быстрые ветки протокола
-        // 1) аудио-дельта базой (base64 pcm/wav)
-        if (msg.type === 'response.audio.delta' && msg.delta) {
+        // Нужное событие с аудио-дельтами в base64 (ожидаем WAV)
+        if (msg.type === 'response.output_audio.delta' && msg.delta) {
           const bytes = Uint8Array.from(atob(msg.delta), c => c.charCodeAt(0));
           playQueue.push(bytes.buffer);
-          playLoop();
-          return;
+          return playLoop();
         }
-        // 2) текстовые куски (опционально отобразим)
-        if ((msg.type === 'response.delta' || msg.type === 'response.output_text.delta') && msg.delta) {
-          transcriptEl && (transcriptEl.textContent += msg.delta);
-          return;
-        }
-        // 3) завершение ответа
-        if (msg.type === 'response.completed') {
-          // готово — ждём новые входные чанки пользователя
-          return;
-        }
-        // Остальное — просто лог
-        console.log('WS event', msg.type || msg);
-      } else {
-        // Бинарные чанки — просто добавим в очередь на проигрывание
-        const buf = await ev.data.arrayBuffer();
-        playQueue.push(buf);
-        playLoop();
+
+        // Остальные события просто логируем (для отладки протокола)
+        if (msg.type) console.log('WS event', msg.type);
+        return;
       }
+
+      // Если вдруг придёт бинарь — тоже пробуем проигрывать
+      const buf = await ev.data.arrayBuffer?.() ?? ev.data;
+      playQueue.push(buf);
+      playLoop();
     };
 
     socket.onerror = (e) => {
@@ -152,12 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     socket.onclose = () => {
-      console.log('WS closed');
-      if (isRecording) {
-        // если закрыли, пока «говорили», просто завершим локально
-        isRecording = false;
-      }
-      cleanupAudio();
+      if (isRecording) isRecording = false;
+      stopMic();
       buttonText.textContent = 'Начать консультацию';
       setStatus('Готов к работе');
     };
@@ -167,9 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!socket) return;
     if (isRecording) {
       isRecording = false;
-      stopCaptureCommit();
-      // дадим секунду допаковать/отправить — потом закрываем
-      setTimeout(() => { socket && socket.close(); }, 1000);
+      // Закрываем ввод и просим СОЗДАТЬ ОТВЕТ ТОЛЬКО В АУДИО
+      send({ type: 'input_audio_buffer.commit' });
+      send({
+        type: 'response.create',
+        response: {
+          modalities: ['audio'], // только голос
+          instructions:
+            'Ты — консультант сервисного центра по ремонту техники (приоритет — устройства Apple). ' +
+            'Отвечай кратко, чётко, дружелюбно и безопасно.',
+        }
+      });
+      setTimeout(() => socket && socket.close(), 1200);
     } else {
       socket.close();
     }
