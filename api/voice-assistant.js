@@ -4,14 +4,11 @@ import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 
-// Создаём наше серверное приложение
 const app = express();
-const port = process.env.PORT || 10000; // Render сам подставит нужный порт
+const port = process.env.PORT || 10000;
 
-// Разрешаем нашему сайту (фронтенду) обращаться к этому серверу
 app.use(cors());
 
-// Создаём эндпоинт, который будет принимать аудио
 app.post('/api/voice-assistant', async (req, res) => {
     try {
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -30,16 +27,14 @@ app.post('/api/voice-assistant', async (req, res) => {
             uploadedFile.originalFilename
         );
 
-        // --- Этап 1: Распознавание ---
         const transcription = await openai.audio.transcriptions.create({
             model: 'whisper-1',
             file: audioFile,
         });
         const userText = transcription.text;
 
-        // --- Этап 2: Ответ ---
         const chatCompletion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo', // Используем экономную модель
+            model: 'gpt-3.5-turbo', // Экономная модель
             messages: [
                 { role: 'system', content: "Ты — эксперт-консультант сервиса Save'n'Sale по ремонту техники Apple. Отвечай кратко и дружелюбно. Всегда предлагай бесплатную диагностику." },
                 { role: 'user', content: userText || "Клиент молчал. Скажи 'Алло?'." }
@@ -48,9 +43,8 @@ app.post('/api/voice-assistant', async (req, res) => {
         });
         const assistantText = chatCompletion.choices[0].message.content;
 
-        // --- Этап 3: Озвучка ---
         const speech = await openai.audio.speech.create({
-            model: 'tts-1', // Используем экономную модель
+            model: 'tts-1', // Экономная модель
             voice: 'nova',
             input: assistantText,
         });
@@ -64,7 +58,6 @@ app.post('/api/voice-assistant', async (req, res) => {
     }
 });
 
-// Запускаем сервер
 app.listen(port, () => {
     console.log(`Сервер запущен на порту ${port}`);
 });
