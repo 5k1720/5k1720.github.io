@@ -5,7 +5,7 @@ import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 
 const PORT = process.env.PORT || 10000;
-const API_KEY = process.env.OPENAI_API_KEY;
+//const API_KEY = process.env.OPENAI_API_KEY;
 const REALTIME_MODEL = process.env.REALTIME_MODEL || 'gpt-realtime';
 
 if (!API_KEY) {
