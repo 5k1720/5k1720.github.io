@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusEl = document.getElementById('status');
     const buttonText = connectButton.querySelector('.button-text');
 
+    // --- Убедись, что этот URL правильный! ---
     const YOUR_BACKEND_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
     let mediaRecorder;
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlaying = false;
     let isRecording = false;
 
+    // Функция для воспроизведения аудиопотока
     const playAudioQueue = () => {
         if (isPlaying || audioQueue.length === 0) return;
         isPlaying = true;
@@ -22,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         source.connect(audioContext.destination);
         source.onended = () => {
             isPlaying = false;
-            playAudioQueue();
+            playAudioQueue(); // Проверяем, не появилось ли что-то новое в очереди
         };
         source.start();
     };
@@ -45,14 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(stream => {
                     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     mediaRecorder.addEventListener('dataavailable', event => {
-                        if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+                        // VVV ВОТ ИЗМЕНЕНИЕ ЗДЕСЬ VVV
+                        if (event.data.size > 0 && socket && socket.readyState === WebSocket.OPEN) {
                             socket.send(event.data);
                         }
                     });
-                    mediaRecorder.start(300);
+                    mediaRecorder.start(300); // Стримим аудио каждые 300 мс
                 });
         };
 
+        // Когда получаем аудио-ответ от сервера
         socket.onmessage = async (event) => {
             const audioBuffer = await audioContext.decodeAudioData(event.data);
             audioQueue.push(audioBuffer);
