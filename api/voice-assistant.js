@@ -4,12 +4,6 @@ import OpenAI from 'openai';
 import express from 'express';
 import cors from 'cors';
 
-// Наша строчка-шпион для проверки версии
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const openaiVersion = require('openai/package.json').version;
-console.log(`--- Установленная версия OpenAI на сервере: ${openaiVersion} ---`);
-
 // --- НАСТРОЙКИ ---
 const port = process.env.PORT || 10000;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
