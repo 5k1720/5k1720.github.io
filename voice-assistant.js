@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const transcriptEl = document.getElementById('transcript');
     const assistantContainer = document.getElementById('assistantContainer');
 
-    // !!! ВАЖНО: ВСТАВЬ СЮДА ССЫЛКУ НА СВОЙ БЭКЕНД С RENDER !!!
-    const YOUR_BACKEND_URL = 'https://voice-assistant-backend.onrender.com/api/voice-assistant'; 
+    // !!! ВАЖНО: ВСТАВЬ СЮДА СВОЮ РЕАЛЬНУЮ ССЫЛКУ НА БЭКЕНД С RENDER !!!
+    const YOUR_BACKEND_URL = 'https://voice-assistant-backend-bym9.onrender.com'; 
 
     let isListening = false;
     let mediaRecorder;
@@ -20,21 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             audioChunks = [];
             mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
+            mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
             mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                if (audioBlob.size > 1000) {
-                    processAudio(audioBlob);
-                } else {
-                    statusEl.textContent = 'Готов к работе';
-                }
+                if (audioBlob.size > 1000) { processAudio(audioBlob); }
+                else { statusEl.textContent = 'Готов к работе'; }
                 stream.getTracks().forEach(track => track.stop());
             };
-            
             mediaRecorder.start();
             isListening = true;
             statusEl.textContent = 'Слушаю... Говорите.';
@@ -51,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const stopRecording = () => {
         if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
-        
         mediaRecorder.stop();
         isListening = false;
         statusEl.textContent = 'Обработка...';
@@ -61,11 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     connectButton.addEventListener('click', () => {
-        if (isListening) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
+        if (isListening) { stopRecording(); }
+        else { startRecording(); }
     });
 
     async function processAudio(audioBlob) {
