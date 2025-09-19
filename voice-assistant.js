@@ -1,6 +1,6 @@
-// voice-assistant.js — toggle talk, 24kHz, voice=alloy, speed=1.4,
-// короткие ответы + явный CTA на наш сервис
-// BUILD=toggle-24k-fast-brief
+// voice-assistant.js — toggle talk, 24kHz, voice=verse, speed=1.45,
+// ультра-короткие ответы + жёсткий сценарий для воды + сильный CTA
+// BUILD=toggle-24k-fast-brief-water
 document.addEventListener('DOMContentLoaded', () => {
   const connectButton = document.getElementById('connectButton');
   const statusEl = document.getElementById('status');
@@ -13,20 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Таймауты
   const IDLE_TIMEOUT_MS     = 20000;    // 20s — полная тишина/нет дельт → закрыть
-  const SESSION_HARD_CAP_MS = 120000;   // защитный предел 120s
+  const SESSION_HARD_CAP_MS = 120000;   // защитный предел
 
-  // Мягкий VAD — только чтобы понять, когда отправлять вопрос в модель
-  const VAD_INTERVAL_MS       = 50;
-  const COMMIT_SILENCE_MS     = 1200;   // пауза перед коммитом (можно 900 для ещё быстрее)
-  const RMS_THRESHOLD         = 0.010;  // чувствительность (низкая, чтобы не резать речь)
+  // Мягкий VAD — только для авто-commit
+  const VAD_INTERVAL_MS   = 50;
+  const COMMIT_SILENCE_MS = 1200;   // можно 900, если хочешь ещё быстрее
+  const RMS_THRESHOLD     = 0.010;
 
   let socket, audioCtx, micStream, sourceNode, procNode;
-  let isLive = false;     // «разговор идёт»
+  let isLive = false;
   let playing = false;
   let stopPlaybackFlag = false;
   let currentSource = null;
 
-  // VAD состояние
+  // VAD
   let silenceMs = 0;
   let lastVAD = 0;
   let hadSpeechSinceCommit = false;
@@ -126,9 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
               response:{
                 modalities:['audio'],
                 instructions:
-                  'Говори только по-русски. Коротко, 1–2 очень короткие фразы по 7–12 слов. ' +
-                  'Без вступлений и лишних подробностей. ' +
-                  'Всегда заканчивай: «Бесплатная диагностика у нас — приходите, всё сделаем быстро и аккуратно.»'
+                  // Сверх-короткий стиль и жёсткий CTA
+                  'Говори только по-русски. Очень кратко: 1–2 фразы по 7–12 слов. ' +
+                  'Без вступлений и лишних деталей. ' +
+                  'Если речь о воде — подчёркни срочность, нельзя сушить, нельзя включать и заряжать, дома не починить. ' +
+                  'Скажи, что важна разборка и отключение питания в сервисе. ' +
+                  'В конце: «Бесплатная диагностика у нас — приходите, это срочно.»'
               }
             });
           }
@@ -155,23 +158,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.onopen=async ()=>{
       isLive=true; hardStopPlayback(); setLiveUi();
-      // Сессионные настройки (голос, скорость, стиль)
+      // Сессионные настройки (голос, скорость, стиль + жёсткая логика для воды)
       send({
         type:'session.update',
         session:{
           modalities:['audio'],
-          voice:'alloy',                   // сменили голос
+          voice:'verse',                 // другой голос
           output_audio_format:'pcm16',
           temperature:0.2,
-          speed:1.4,                       // быстрее речь
+          speed:1.45,                    // быстрее
           instructions:
-            'Ты — заботливый консультант сервисного центра по ремонту техники (приоритет — Apple: iPhone, iPad, MacBook, iMac, Apple Watch, AirPods). ' +
-            'Говори только по-русски. Коротко и динамично: максимум 1–2 фразы, по 7–12 слов каждую. ' +
-            '1) Коротко назови вероятную причину простыми словами. ' +
-            '2) Дай 1 безопасный шаг, который клиент может сделать сам, если уместно. ' +
-            '3) Если риск есть — прямо скажи об этом и предложи обратиться в наш сервис. ' +
-            'Избегай длинных инструкций, воды и вступлений. ' +
-            'Финал каждой реплики: «Бесплатная диагностика у нас — приходите, всё сделаем быстро и аккуратно.»'
+            'Ты — заботливый консультант сервисного центра (приоритет — Apple: iPhone, iPad, MacBook, iMac, Apple Watch, AirPods). ' +
+            'Говори только по-русски. Очень коротко: 1–2 фразы, по 7–12 слов. ' +
+            'Всегда по делу, без вступлений. ' +
+            'Если пользователь говорит про воду/намокание/залитие: ' +
+            '— это срочно; не сушить и не ждать; не включать и не заряжать; ' +
+            '— дома не починить; нужна разборка и отключение питания, чтобы ничего не сгорело; ' +
+            '— пригласи как можно раньше в сервис. ' +
+            'Всегда заканчивай: «Бесплатная диагностика у нас — приходите, это срочно.»'
         }
       });
 
@@ -188,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try{
           const f32=pcm16ToFloat32(abFromB64(b64));
           pcmQueue.push(f32);
-          resetIdleTimer(); // активность сервера
+          resetIdleTimer();
           playLoop();
           return true;
         }catch{ return false; }
