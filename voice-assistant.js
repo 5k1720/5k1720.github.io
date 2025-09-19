@@ -1,8 +1,6 @@
-// voice-assistant.js — toggle talk: 1 клик старт, 2-й клик стоп.
-// 24kHz in/out, speed 1.3, мягкий VAD только для commit (≈1.2s тишины),
-// idle-таймаут 20s, стиль «заботливый консультант».
-// BUILD=toggle-24k
-
+// voice-assistant.js — toggle talk, 24kHz, voice=alloy, speed=1.4,
+// короткие ответы + явный CTA на наш сервис
+// BUILD=toggle-24k-fast-brief
 document.addEventListener('DOMContentLoaded', () => {
   const connectButton = document.getElementById('connectButton');
   const statusEl = document.getElementById('status');
@@ -14,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const INPUT_TARGET_RATE  = 24000;
 
   // Таймауты
-  const IDLE_TIMEOUT_MS     = 20000;   // 20s — полная тишина/нет дельт → закрыть
-  const SESSION_HARD_CAP_MS = 120000;  // защитный предел 120s
+  const IDLE_TIMEOUT_MS     = 20000;    // 20s — полная тишина/нет дельт → закрыть
+  const SESSION_HARD_CAP_MS = 120000;   // защитный предел 120s
 
   // Мягкий VAD — только чтобы понять, когда отправлять вопрос в модель
   const VAD_INTERVAL_MS       = 50;
-  const COMMIT_SILENCE_MS     = 1200;  // пауза перед коммитом
-  const RMS_THRESHOLD         = 0.010; // чувствительность (низкая, чтобы не резать речь)
+  const COMMIT_SILENCE_MS     = 1200;   // пауза перед коммитом (можно 900 для ещё быстрее)
+  const RMS_THRESHOLD         = 0.010;  // чувствительность (низкая, чтобы не резать речь)
 
   let socket, audioCtx, micStream, sourceNode, procNode;
-  let isLive = false;               // «разговор идёт» (мик + сокет активны)
+  let isLive = false;     // «разговор идёт»
   let playing = false;
   let stopPlaybackFlag = false;
   let currentSource = null;
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // VAD состояние
   let silenceMs = 0;
   let lastVAD = 0;
-  let hadSpeechSinceCommit = false; // чтобы не коммитить многократно в глухой тишине
+  let hadSpeechSinceCommit = false;
 
   // Таймеры
   let idleTimer = null;
@@ -39,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ==== UI ====
   const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
-  function setStartUi() { buttonText.textContent = 'Начать разговор'; setStatus('Готов к работе'); }
-  function setLiveUi()  { buttonText.textContent = 'Завершить разговор'; setStatus('В эфире: говорите, я слушаю'); }
+  function setStartUi() { buttonText.textContent = 'Начать разговор';     setStatus('Готов к работе'); }
+  function setLiveUi()  { buttonText.textContent = 'Завершить разговор';  setStatus('В эфире: говорите, я слушаю'); }
 
   async function ensureAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -111,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const b64=b64FromAB(floatToPCM16(down));
       send({ type:'input_audio_buffer.append', audio:b64 });
 
-      // простая VAD чтобы понять, когда «фраза закончилась»
+      // простая VAD, чтобы понять, когда «фраза закончилась»
       const now=performance.now();
       if(now-lastVAD>=VAD_INTERVAL_MS){
         lastVAD=now;
@@ -120,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(rms<RMS_THRESHOLD){
           silenceMs+=VAD_INTERVAL_MS;
           if(silenceMs>=COMMIT_SILENCE_MS && hadSpeechSinceCommit){
-            // фиксируем сказанное и просим ответ
             hadSpeechSinceCommit=false;
             silenceMs=0;
             send({ type:'input_audio_buffer.commit' });
@@ -129,18 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
               response:{
                 modalities:['audio'],
                 instructions:
-                  'Говори только по-русски, быстрее обычного, без длинных пауз. ' +
-                  'Дай 1–2 короткие фразы с безопасным советом. ' +
-                  'Заверши: «Бесплатная диагностика у нас — приходите.»'
+                  'Говори только по-русски. Коротко, 1–2 очень короткие фразы по 7–12 слов. ' +
+                  'Без вступлений и лишних подробностей. ' +
+                  'Всегда заканчивай: «Бесплатная диагностика у нас — приходите, всё сделаем быстро и аккуратно.»'
               }
             });
           }
         }else{
-          silenceMs=0; hadSpeechSinceCommit=true; // была речь — следующий блок тишины можно коммитить
+          silenceMs=0; hadSpeechSinceCommit=true;
         }
       }
 
-      resetIdleTimer(); // есть активность клиента
+      resetIdleTimer(); // активность клиента
     };
   }
   function stopMic(){
@@ -158,25 +155,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.onopen=async ()=>{
       isLive=true; hardStopPlayback(); setLiveUi();
-      // Сессионные настройки
+      // Сессионные настройки (голос, скорость, стиль)
       send({
         type:'session.update',
         session:{
           modalities:['audio'],
-          voice:'verse',
+          voice:'alloy',                   // сменили голос
           output_audio_format:'pcm16',
           temperature:0.2,
-          speed:1.3,
+          speed:1.4,                       // быстрее речь
           instructions:
             'Ты — заботливый консультант сервисного центра по ремонту техники (приоритет — Apple: iPhone, iPad, MacBook, iMac, Apple Watch, AirPods). ' +
-            'Говори только по-русски, очень кратко (1–2 фразы), дружелюбно и уверенно. ' +
+            'Говори только по-русски. Коротко и динамично: максимум 1–2 фразы, по 7–12 слов каждую. ' +
             '1) Коротко назови вероятную причину простыми словами. ' +
-            '2) Дай 1–2 безопасных шага, что клиент может сделать сам, если уместно. ' +
-            '3) Если риск высокий — так и скажи и предложи сразу принести устройство в сервис. ' +
-            'Соблюдай безопасность: при намокании не включать/не заряжать/не сушить феном; при вздутии/запахе гари — прекратить использование; ' +
-            'не давить на треснувший экран; не подключать кабели во влажные разъёмы; по возможности сделать резервную копию. ' +
-            'Не обещай цены/сроки без диагностики. Тон: спокойный, сочувствующий, без жаргона. ' +
-            'Финал каждой реплики: «Бесплатная диагностика у нас — приходите.»'
+            '2) Дай 1 безопасный шаг, который клиент может сделать сам, если уместно. ' +
+            '3) Если риск есть — прямо скажи об этом и предложи обратиться в наш сервис. ' +
+            'Избегай длинных инструкций, воды и вступлений. ' +
+            'Финал каждой реплики: «Бесплатная диагностика у нас — приходите, всё сделаем быстро и аккуратно.»'
         }
       });
 
@@ -212,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Конец одной реплики — разговор НЕ завершаем, ждём следующую речь
       if(msg.type==='response.audio.done' || msg.type==='response.done' || msg.type==='response.completed'){
         resetIdleTimer();
         return;
