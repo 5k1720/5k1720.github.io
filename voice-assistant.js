@@ -1,155 +1,182 @@
-// voice-assistant.js — RU-only, коротко+CTA, 24kHz in/out, без клиентской VAD, idle 60s, speed 1.3
-// BUILD=guide24k
+// voice-assistant.js — toggle talk: 1 клик старт, 2-й клик стоп.
+// 24kHz in/out, speed 1.3, мягкий VAD только для commit (≈1.2s тишины),
+// idle-таймаут 20s, стиль «заботливый консультант».
+// BUILD=toggle-24k
+
 document.addEventListener('DOMContentLoaded', () => {
   const connectButton = document.getElementById('connectButton');
   const statusEl = document.getElementById('status');
   const buttonText = connectButton.querySelector('.button-text');
   const WS_URL = 'wss://voice-assistant-backend-bym9.onrender.com';
 
-  // Частоты как в примерах: 24 кГц на вход/выход
+  // Частоты как в гайдах
   const OUTPUT_SAMPLE_RATE = 24000;
-  const INPUT_TARGET_RATE = 24000;
+  const INPUT_TARGET_RATE  = 24000;
 
   // Таймауты
-  const IDLE_TIMEOUT_MS = 60000;   // нет активности → закрываем сокет через 60s
-  const SESSION_HARD_CAP_MS = 120000;
+  const IDLE_TIMEOUT_MS     = 20000;   // 20s — полная тишина/нет дельт → закрыть
+  const SESSION_HARD_CAP_MS = 120000;  // защитный предел 120s
+
+  // Мягкий VAD — только чтобы понять, когда отправлять вопрос в модель
+  const VAD_INTERVAL_MS       = 50;
+  const COMMIT_SILENCE_MS     = 1200;  // пауза перед коммитом
+  const RMS_THRESHOLD         = 0.010; // чувствительность (низкая, чтобы не резать речь)
 
   let socket, audioCtx, micStream, sourceNode, procNode;
-  let isRecording = false;
-  let awaitingReply = false;
+  let isLive = false;               // «разговор идёт» (мик + сокет активны)
   let playing = false;
   let stopPlaybackFlag = false;
   let currentSource = null;
 
+  // VAD состояние
+  let silenceMs = 0;
+  let lastVAD = 0;
+  let hadSpeechSinceCommit = false; // чтобы не коммитить многократно в глухой тишине
+
+  // Таймеры
   let idleTimer = null;
   let sessionCapTimer = null;
 
   // ==== UI ====
   const setStatus = (t) => { if (statusEl) statusEl.textContent = t; };
-  function setIdleUi() { buttonText.textContent = 'Начать консультацию'; setStatus('Готов к работе'); }
+  function setStartUi() { buttonText.textContent = 'Начать разговор'; setStatus('Готов к работе'); }
+  function setLiveUi()  { buttonText.textContent = 'Завершить разговор'; setStatus('В эфире: говорите, я слушаю'); }
 
   async function ensureAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state !== 'running') { try { await audioCtx.resume(); } catch {} }
   }
 
-  // ==== PCM/utils ====
-  function b64FromAB(ab) { const u=new Uint8Array(ab); let s=''; for (let i=0;i<u.length;i++) s+=String.fromCharCode(u[i]); return btoa(s); }
-  function abFromB64(b64) { const s=atob(b64); const u=new Uint8Array(s.length); for (let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
-  function floatToPCM16(f32) { const o=new Int16Array(f32.length); for (let i=0;i<f32.length;i++){const v=Math.max(-1,Math.min(1,f32[i])); o[i]=v<0?v*0x8000:v*0x7FFF;} return o.buffer; }
-  function pcm16ToFloat32(u8) { const n=u8.length>>1, out=new Float32Array(n); for(let i=0,o=0;i<n;i++,o+=2){let v=(u8[o+1]<<8)|u8[o]; if(v&0x8000)v|=0xFFFF0000; out[i]=Math.max(-1,Math.min(1,v/0x8000)); } return out; }
+  // ==== PCM utils ====
+  function b64FromAB(ab){const u=new Uint8Array(ab);let s='';for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
+  function abFromB64(b64){const s=atob(b64);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+  function floatToPCM16(f32){const o=new Int16Array(f32.length);for(let i=0;i<f32.length;i++){const v=Math.max(-1,Math.min(1,f32[i]));o[i]=v<0?v*0x8000:v*0x7FFF;}return o.buffer;}
+  function pcm16ToFloat32(u8){const n=u8.length>>1,out=new Float32Array(n);for(let i=0,o=0;i<n;i++,o+=2){let v=(u8[o+1]<<8)|u8[o];if(v&0x8000)v|=0xFFFF0000;out[i]=Math.max(-1,Math.min(1,v/0x8000));}return out;}
 
-  // Простая децимация inputRate → targetRate (для совместимости, но при 24k→24k вернёт как есть)
-  function downsample(inputFloat32, inputRate, targetRate) {
-    if (inputRate === targetRate) return inputFloat32;
-    const ratio = inputRate / targetRate;
-    const outLen = Math.floor(inputFloat32.length / ratio);
-    const out = new Float32Array(outLen);
-    for (let i=0;i<outLen;i++){
-      const start = Math.floor(i*ratio);
-      const end = Math.min(Math.floor((i+1)*ratio), inputFloat32.length);
-      let sum=0; for(let j=start;j<end;j++) sum+=inputFloat32[j];
-      out[i] = sum / Math.max(1, end-start);
-    }
+  // downsample inputRate → targetRate
+  function downsample(input, inRate, targetRate){
+    if(inRate===targetRate) return input;
+    const ratio=inRate/targetRate, outLen=Math.floor(input.length/ratio), out=new Float32Array(outLen);
+    for(let i=0;i<outLen;i++){const start=Math.floor(i*ratio), end=Math.min(Math.floor((i+1)*ratio), input.length);
+      let sum=0; for(let j=start;j<end;j++) sum+=input[j]; out[i]=sum/Math.max(1,end-start);}
     return out;
   }
 
   // ==== Playback ====
   let pcmQueue = [];
-  async function playLoop() {
-    if (playing) return; playing = true; stopPlaybackFlag = false;
+  async function playLoop(){
+    if(playing) return; playing=true; stopPlaybackFlag=false;
     await ensureAudioCtx();
-    while (pcmQueue.length && !stopPlaybackFlag) {
-      const f32 = pcmQueue.shift();
-      try {
-        const buf = audioCtx.createBuffer(1, f32.length, OUTPUT_SAMPLE_RATE);
-        buf.copyToChannel(f32, 0, 0);
-        const src = audioCtx.createBufferSource();
-        currentSource = src;
-        src.buffer = buf; src.connect(audioCtx.destination);
-        await new Promise(res => { src.onended = res; src.start(); });
-      } catch (e) { console.warn('PCM play error', e); }
-      finally { currentSource = null; }
+    while(pcmQueue.length && !stopPlaybackFlag){
+      const f32=pcmQueue.shift();
+      try{
+        const buf=audioCtx.createBuffer(1, f32.length, OUTPUT_SAMPLE_RATE);
+        buf.copyToChannel(f32,0,0);
+        const src=audioCtx.createBufferSource();
+        currentSource=src; src.buffer=buf; src.connect(audioCtx.destination);
+        await new Promise(res=>{src.onended=res; src.start();});
+      }catch(e){ console.warn('PCM play error', e); }
+      finally{ currentSource=null; }
     }
-    playing = false;
-    if (!awaitingReply && !isRecording) setIdleUi();
+    playing=false;
   }
-  function hardStopPlayback() {
-    stopPlaybackFlag = true; pcmQueue.length = 0;
-    try { currentSource && currentSource.stop(0); } catch {}
-    currentSource = null;
-  }
+  function hardStopPlayback(){ stopPlaybackFlag=true; pcmQueue.length=0; try{ currentSource && currentSource.stop(0);}catch{} currentSource=null; }
 
   // ==== Таймеры ====
-  function resetIdleTimer() {
+  function resetIdleTimer(){
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      try { socket && socket.close(); } catch {}
-      hardStopPlayback();
-      stopMic();
-      isRecording = false; awaitingReply = false;
-      setIdleUi();
-    }, IDLE_TIMEOUT_MS);
+    idleTimer=setTimeout(()=>{ stopAll('Нет активности'); }, IDLE_TIMEOUT_MS);
   }
-  function startSessionCap() {
+  function startSessionCap(){
     clearTimeout(sessionCapTimer);
-    sessionCapTimer = setTimeout(() => {
-      try { socket && socket.close(); } catch {}
-      hardStopPlayback();
-      stopMic();
-      isRecording = false; awaitingReply = false;
-      setIdleUi();
-    }, SESSION_HARD_CAP_MS);
+    sessionCapTimer=setTimeout(()=>{ stopAll('Лимит сессии'); }, SESSION_HARD_CAP_MS);
   }
 
-  // ==== Mic capture (без клиентской VAD) ====
-  async function startMic() {
+  // ==== Микрофон + мягкий VAD (только для commit) ====
+  async function startMic(){
     await ensureAudioCtx();
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const bufSize = 4096;
-    sourceNode = audioCtx.createMediaStreamSource(micStream);
-    procNode = audioCtx.createScriptProcessor(bufSize, 1, 1);
+    micStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const bufSize=4096;
+    sourceNode=audioCtx.createMediaStreamSource(micStream);
+    procNode=audioCtx.createScriptProcessor(bufSize,1,1);
     sourceNode.connect(procNode); procNode.connect(audioCtx.destination);
 
-    procNode.onaudioprocess = (e) => {
-      if (!isRecording) return;
-      const ch0 = e.inputBuffer.getChannelData(0);
-      const down = downsample(ch0, audioCtx.sampleRate, INPUT_TARGET_RATE);
-      const b64 = b64FromAB(floatToPCM16(down));
-      send({ type: 'input_audio_buffer.append', audio: b64 });
-      resetIdleTimer(); // есть активность — продлеваем
+    silenceMs=0; lastVAD=performance.now(); hadSpeechSinceCommit=false;
+
+    procNode.onaudioprocess=(e)=>{
+      if(!isLive) return;
+      const ch0=e.inputBuffer.getChannelData(0);
+      // отправляем звук
+      const down=downsample(ch0, audioCtx.sampleRate, INPUT_TARGET_RATE);
+      const b64=b64FromAB(floatToPCM16(down));
+      send({ type:'input_audio_buffer.append', audio:b64 });
+
+      // простая VAD чтобы понять, когда «фраза закончилась»
+      const now=performance.now();
+      if(now-lastVAD>=VAD_INTERVAL_MS){
+        lastVAD=now;
+        let sum=0; for(let i=0;i<ch0.length;i++) sum+=ch0[i]*ch0[i];
+        const rms=Math.sqrt(sum/ch0.length);
+        if(rms<RMS_THRESHOLD){
+          silenceMs+=VAD_INTERVAL_MS;
+          if(silenceMs>=COMMIT_SILENCE_MS && hadSpeechSinceCommit){
+            // фиксируем сказанное и просим ответ
+            hadSpeechSinceCommit=false;
+            silenceMs=0;
+            send({ type:'input_audio_buffer.commit' });
+            send({
+              type:'response.create',
+              response:{
+                modalities:['audio'],
+                instructions:
+                  'Говори только по-русски, быстрее обычного, без длинных пауз. ' +
+                  'Дай 1–2 короткие фразы с безопасным советом. ' +
+                  'Заверши: «Бесплатная диагностика у нас — приходите.»'
+              }
+            });
+          }
+        }else{
+          silenceMs=0; hadSpeechSinceCommit=true; // была речь — следующий блок тишины можно коммитить
+        }
+      }
+
+      resetIdleTimer(); // есть активность клиента
     };
   }
-  function stopMic() {
-    try { procNode?.disconnect(); sourceNode?.disconnect(); micStream?.getTracks().forEach(t => t.stop()); } catch {}
-    procNode = sourceNode = micStream = null;
+  function stopMic(){
+    try{ procNode?.disconnect(); sourceNode?.disconnect(); micStream?.getTracks().forEach(t=>t.stop()); }catch{}
+    procNode=sourceNode=micStream=null;
   }
 
   // ==== WS ====
-  function send(obj) { socket?.readyState === WebSocket.OPEN && socket.send(JSON.stringify(obj)); }
+  function send(obj){ socket?.readyState===WebSocket.OPEN && socket.send(JSON.stringify(obj)); }
 
-  function connect() {
-    if (socket?.readyState === WebSocket.OPEN) return;
-    socket = new WebSocket(WS_URL);
-    socket.binaryType = 'arraybuffer';
+  function connect(){
+    if(socket?.readyState===WebSocket.OPEN) return;
+    socket=new WebSocket(WS_URL);
+    socket.binaryType='arraybuffer';
 
-    socket.onopen = async () => {
-      isRecording = true; awaitingReply = false; hardStopPlayback();
-      setStatus('Говорите…'); buttonText.textContent = 'Завершить разговор';
-
-      // Сессия: RU-only, быстро, 1–2 фразы, CTA, голос, PCM16, speed 1.3
+    socket.onopen=async ()=>{
+      isLive=true; hardStopPlayback(); setLiveUi();
+      // Сессионные настройки
       send({
-        type: 'session.update',
-        session: {
-          voice: 'verse',
-          output_audio_format: 'pcm16',
-          temperature: 0.2,
-          speed: 1.3,
+        type:'session.update',
+        session:{
+          modalities:['audio'],
+          voice:'verse',
+          output_audio_format:'pcm16',
+          temperature:0.2,
+          speed:1.3,
           instructions:
-            'Всегда говори только по-русски. Говори быстрее обычного темпа, без длинных пауз. ' +
-            'Ты консультант по ремонту (приоритет — Apple: iPhone, MacBook, iMac, Apple Watch, Mac mini). ' +
-            'Дай ответ в 1–2 коротких фразах (диагностика/вероятные причины/что проверить самому). ' +
-            'Заверши: «Приходите на бесплатную диагностику — запишу вас?»'
+            'Ты — заботливый консультант сервисного центра по ремонту техники (приоритет — Apple: iPhone, iPad, MacBook, iMac, Apple Watch, AirPods). ' +
+            'Говори только по-русски, очень кратко (1–2 фразы), дружелюбно и уверенно. ' +
+            '1) Коротко назови вероятную причину простыми словами. ' +
+            '2) Дай 1–2 безопасных шага, что клиент может сделать сам, если уместно. ' +
+            '3) Если риск высокий — так и скажи и предложи сразу принести устройство в сервис. ' +
+            'Соблюдай безопасность: при намокании не включать/не заряжать/не сушить феном; при вздутии/запахе гари — прекратить использование; ' +
+            'не давить на треснувший экран; не подключать кабели во влажные разъёмы; по возможности сделать резервную копию. ' +
+            'Не обещай цены/сроки без диагностики. Тон: спокойный, сочувствующий, без жаргона. ' +
+            'Финал каждой реплики: «Бесплатная диагностика у нас — приходите.»'
         }
       });
 
@@ -158,64 +185,66 @@ document.addEventListener('DOMContentLoaded', () => {
       await startMic();
     };
 
-    socket.onmessage = (ev) => {
-      if (typeof ev.data !== 'string') return;
-      let msg; try { msg = JSON.parse(ev.data); } catch { return; }
+    socket.onmessage=(ev)=>{
+      if(typeof ev.data!=='string') return;
+      let msg; try{ msg=JSON.parse(ev.data);}catch{ return; }
 
-      // аудио-дельты (PCM16 base64) — учитываем разные названия
-      if ((msg.type === 'response.audio.delta' || msg.type === 'response.audio_delta' || msg.type === 'response.output_audio.delta') && msg.delta) {
-        const f32 = pcm16ToFloat32(abFromB64(msg.delta));
-        pcmQueue.push(f32);
-        resetIdleTimer(); // пришли дельты — активность
-        return playLoop();
+      const pushDelta = (b64)=>{
+        try{
+          const f32=pcm16ToFloat32(abFromB64(b64));
+          pcmQueue.push(f32);
+          resetIdleTimer(); // активность сервера
+          playLoop();
+          return true;
+        }catch{ return false; }
+      };
+
+      // Классика
+      if((msg.type==='response.audio.delta' || msg.type==='response.audio_delta' || msg.type==='response.output_audio.delta') && msg.delta){
+        if(pushDelta(msg.delta)) return;
+      }
+      // Батч-дельты
+      if(msg.type==='response.delta' && msg.delta){
+        const arr=Array.isArray(msg.delta)?msg.delta:[msg.delta];
+        for(const part of arr){
+          if(part?.type==='output_audio.delta' && part?.audio){ if(pushDelta(part.audio)) return; }
+          if(part?.type==='audio' && part?.delta){ if(pushDelta(part.delta)) return; }
+        }
       }
 
-      // конец ответа — закрываем сокет
-      if (msg.type === 'response.audio.done' || msg.type === 'response.done' || msg.type === 'response.completed') {
-        awaitingReply = false;
-        try { socket && socket.close(); } catch {}
-        return setIdleUi();
+      // Конец одной реплики — разговор НЕ завершаем, ждём следующую речь
+      if(msg.type==='response.audio.done' || msg.type==='response.done' || msg.type==='response.completed'){
+        resetIdleTimer();
+        return;
       }
 
-      if (msg.type) console.log('WS event', msg.type);
+      if(msg.type==='response.error'){ console.error('Realtime error:', msg); }
     };
 
-    socket.onerror = (e) => { console.error('WS error', e); setStatus('Ошибка соединения'); };
-    socket.onclose = () => {
-      isRecording = false; awaitingReply = false;
-      clearTimeout(idleTimer); clearTimeout(sessionCapTimer);
-      stopMic(); setIdleUi();
-    };
+    socket.onerror=(e)=>{ console.error('WS error', e); setStatus('Ошибка соединения'); };
+    socket.onclose =()=>{ stopAll(); };
   }
 
-  // ==== Кнопка ====
-  connectButton.addEventListener('click', async () => {
+  // ==== Стоп всего ====
+  function stopAll(reason=''){
+    if(!isLive && !socket) return;
+    isLive=false;
+    hardStopPlayback();
+    stopMic();
+    try{ socket && socket.close(); }catch{}
+    socket=null;
+    clearTimeout(idleTimer); clearTimeout(sessionCapTimer);
+    setStartUi();
+    if(reason) console.log('[ended]', reason);
+  }
+
+  // ==== Кнопка-тоггл ====
+  connectButton.addEventListener('click', async ()=>{
     await ensureAudioCtx();
-
-    if (isRecording) {
-      // завершаем запись → просим короткий ответ
-      isRecording = false; stopMic(); awaitingReply = true;
-      setStatus('Формирую ответ…'); buttonText.textContent = 'Остановить ответ';
-      send({ type: 'input_audio_buffer.commit' });
-      send({
-        type: 'response.create',
-        response: {
-          modalities: ['audio'],
-          instructions:
-            'Говори быстрее, 1–2 коротких фразы. В конце: «Приходите на бесплатную диагностику — запишу вас?»'
-        }
-      });
-      return;
-    }
-
-    if (awaitingReply || playing) {
-      // жёсткий стоп
-      awaitingReply = false; hardStopPlayback();
-      try { socket && socket.close(); } catch {}
-      clearTimeout(idleTimer); clearTimeout(sessionCapTimer);
-      return setIdleUi();
-    }
-
-    connect();
+    if(isLive){ stopAll('Кнопкой'); }
+    else{ connect(); }
   });
+
+  // helper for send
+  function send(obj){ socket?.readyState===WebSocket.OPEN && socket.send(JSON.stringify(obj)); }
 });
