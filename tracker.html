@@ -58,14 +58,17 @@
         const diffTime = Math.abs(now - startDate);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; 
 
-        document.getElementById("days-count").textContent = diffDays + " дней";
+        function getDeclension(number, words) {
+            const cases = [2, 0, 1, 1, 1, 2];
+            return words[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+        }
 
-        let goal = 30;
-        if (diffDays > 30) goal = 90;
-        if (diffDays > 90) goal = 180;
-        if (diffDays > 180) goal = 365;
+        const daysWords = ['день', 'дня', 'дней'];
+        document.getElementById("days-count").textContent = diffDays + " " + getDeclension(diffDays, daysWords);
+
+        const goal = 1095; // 3 года
         
-        document.getElementById("next-goal").textContent = "Цель: " + goal + " дней";
+        document.getElementById("next-goal").textContent = "Цель: 3 года";
 
         let percent = (diffDays / goal) * 100;
         if (percent > 100) percent = 100;
