@@ -245,3 +245,56 @@ animation:liquid-shift 7s ease-in-out infinite
 50%{background-position:100% 50%,0% 50%,60% 40%}
 100%{background-position:0% 50%,100% 50%,50% 50%}
 }
+
+/* --- Business Card --- */
+.business-card {
+  background: rgba(30, 30, 30, 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  color: #ffffff; /* Dark theme text */
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.business-card h2 {
+  margin-top: 0;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  transform: translateZ(30px);
+}
+
+.business-card p {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  color: #cccccc;
+  transform: translateZ(20px);
+}
+
+.business-card .email-btn {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.3s, transform 0.3s;
+  transform: translateZ(40px);
+}
+
+.business-card .email-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateZ(40px) scale(1.05);
+}
+
+.card-content {
+  transform-style: preserve-3d;
+}
