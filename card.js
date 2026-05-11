@@ -14,11 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const rotateY = ((x - centerX) / centerX) * 15;
       
       card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
     });
     
     card.addEventListener('mouseleave', () => {
       card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
       card.style.transition = 'transform 0.5s ease-out';
+      
+      card.style.setProperty('--mouse-x', `-100px`);
+      card.style.setProperty('--mouse-y', `-100px`);
     });
     
     card.addEventListener('mouseenter', () => {

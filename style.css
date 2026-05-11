@@ -248,26 +248,64 @@ animation:liquid-shift 7s ease-in-out infinite
 
 /* --- Business Card --- */
 .business-card {
-  background: rgba(30, 30, 30, 0.4);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  position: relative;
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 26px; /* Squircle effect approximation */
   padding: 3rem;
   max-width: 400px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
   color: #ffffff; /* Dark theme text */
   transform-style: preserve-3d;
   will-change: transform;
+  --mouse-x: -100px;
+  --mouse-y: -100px;
+}
+
+/* Glowing border */
+.business-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: radial-gradient(
+    400px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.6),
+    transparent 40%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 10;
+  transition: background 0.1s;
+}
+
+/* Soft inner glow */
+.business-card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.05),
+    transparent 40%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .business-card h2 {
   margin-top: 0;
-  font-size: 2rem;
+  font-size: 2.2rem;
   margin-bottom: 1rem;
-  transform: translateZ(30px);
+  transform: translateZ(50px);
+  text-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
 .business-card p {
@@ -275,7 +313,7 @@ animation:liquid-shift 7s ease-in-out infinite
   line-height: 1.5;
   margin-bottom: 2rem;
   color: #cccccc;
-  transform: translateZ(20px);
+  transform: translateZ(30px);
 }
 
 .business-card .email-btn {
@@ -286,15 +324,20 @@ animation:liquid-shift 7s ease-in-out infinite
   text-decoration: none;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: background 0.3s, transform 0.3s;
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
   transform: translateZ(40px);
+  position: relative;
+  z-index: 2;
 }
 
 .business-card .email-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateZ(40px) scale(1.05);
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateZ(50px) scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 .card-content {
+  position: relative;
+  z-index: 1;
   transform-style: preserve-3d;
 }
