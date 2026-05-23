@@ -24,6 +24,8 @@
   }
   @keyframes bar-glow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
   .tracker-labels { display: flex; justify-content: space-between; width: 100%; margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7; }
+  .tracker-marks { display: flex; justify-content: center; gap: 8px; margin-top: 1.5rem; width: 100%; }
+  .tracker-mark { width: 8px; height: 8px; border-radius: 50%; background-color: #2ecc71; opacity: 0.6; box-shadow: 0 0 6px rgba(46, 204, 113, 0.5); }
 </style>
 </head>
 <body class="page-main">
@@ -48,6 +50,9 @@
         <div class="tracker-labels">
             <span>Старт: 20.03.2026</span>
             <span id="next-goal">Цель: 30 дней</span>
+        </div>
+        <div class="tracker-marks" id="tracker-marks" title="Сбитые вражеские самолеты">
+            <div class="tracker-mark"></div>
         </div>
     </div>
 </main>
