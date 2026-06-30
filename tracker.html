@@ -40,47 +40,70 @@
         <a href="me.html">обо мне</a>
     </nav>
 </header>
+<style>
+  .trackers-container {
+    display: flex; flex-direction: column; gap: 2rem; width: 100%; max-width: 600px; margin: 0 auto;
+  }
+</style>
 <main class="main-content main-content-padded">
-    <div class="tracker-wrapper">
-        <h2 class="tracker-title">Без шмали</h2>
-        <div class="tracker-days liquid" id="days-count">0 дней</div>
-        <div class="tracker-bar-container">
-            <div class="tracker-bar" id="progress-bar"></div>
+    <div class="trackers-container">
+        <div class="tracker-wrapper">
+            <h2 class="tracker-title">Без шмали</h2>
+            <div class="tracker-days liquid" id="days-count">0 дней</div>
+            <div class="tracker-bar-container">
+                <div class="tracker-bar" id="progress-bar"></div>
+            </div>
+            <div class="tracker-labels">
+                <span>Старт: 20.03.2026</span>
+                <span id="next-goal">Цель: 3 года</span>
+            </div>
+            <div class="tracker-marks" id="tracker-marks" title="Сбитые вражеские самолеты">
+                <div class="tracker-mark"></div>
+            </div>
         </div>
-        <div class="tracker-labels">
-            <span>Старт: 20.03.2026</span>
-            <span id="next-goal">Цель: 30 дней</span>
-        </div>
-        <div class="tracker-marks" id="tracker-marks" title="Сбитые вражеские самолеты">
-            <div class="tracker-mark"></div>
+
+        <div class="tracker-wrapper">
+            <h2 class="tracker-title">Без сигарет</h2>
+            <div class="tracker-days liquid" id="days-count-smoke">0 дней</div>
+            <div class="tracker-bar-container">
+                <div class="tracker-bar" id="progress-bar-smoke"></div>
+            </div>
+            <div class="tracker-labels">
+                <span>Старт: 15.06.2026</span>
+                <span id="next-goal-smoke">Цель: 1 год</span>
+            </div>
+            <div class="tracker-marks" id="tracker-marks-smoke" title="Сэкономленные пачки">
+                <div class="tracker-mark"></div>
+            </div>
         </div>
     </div>
 </main>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const startDate = new Date("2026-03-20T00:00:00");
-        const now = new Date();
-        const diffTime = Math.abs(now - startDate);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; 
-
         function getDeclension(number, words) {
             const cases = [2, 0, 1, 1, 1, 2];
             return words[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
         }
-
         const daysWords = ['день', 'дня', 'дней'];
+
+        // Трекер — без шмали
+        const startDate = new Date("2026-03-20T00:00:00");
+        const now = new Date();
+        const diffDays = Math.floor(Math.abs(now - startDate) / (1000 * 60 * 60 * 24)) + 1;
         document.getElementById("days-count").textContent = diffDays + " " + getDeclension(diffDays, daysWords);
-
-        const goal = 1095; // 3 года
-        
-        document.getElementById("next-goal").textContent = "Цель: 3 года";
-
-        let percent = (diffDays / goal) * 100;
-        if (percent > 100) percent = 100;
-
+        const goal = 1095;
         setTimeout(() => {
-            document.getElementById("progress-bar").style.width = percent + "%";
+            document.getElementById("progress-bar").style.width = Math.min((diffDays / goal) * 100, 100) + "%";
+        }, 100);
+
+        // Трекер — без сигарет
+        const smokeStart = new Date("2026-06-15T00:00:00");
+        const smokeDays = Math.floor(Math.abs(now - smokeStart) / (1000 * 60 * 60 * 24)) + 1;
+        document.getElementById("days-count-smoke").textContent = smokeDays + " " + getDeclension(smokeDays, daysWords);
+        const smokeGoal = 365;
+        setTimeout(() => {
+            document.getElementById("progress-bar-smoke").style.width = Math.min((smokeDays / smokeGoal) * 100, 100) + "%";
         }, 100);
     });
 </script>
